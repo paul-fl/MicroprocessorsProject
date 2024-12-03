@@ -122,7 +122,7 @@ test_B3: ;button 4
     movwf   Note2
     return
 test_E4:    ;button 5
-    movlw   11101101B
+    movlw   11011101B
     cpfseq  combineddata
     bra	    invalid
     movlw   'E'
