@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global  LCD_Setup, LCD_Write_Message, LCD_Write_Hex
+global  LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D, LCD_Clear_Display
 
 psect	udata_acs   ; named variables in access ram
 LCD_cnt_l:	ds 1	; reserve 1 byte for variable LCD_cnt_l
@@ -48,6 +48,13 @@ LCD_Setup:
 	movlw	10		; wait 40us
 	call	LCD_delay_x4us
 	return
+
+LCD_Clear_Display:
+    movlw	00000001B	; display clear
+    call	LCD_Send_Byte_I
+    movlw	2		; wait 2ms
+    call	LCD_delay_ms
+    return
 
 LCD_Write_Hex:			; Writes byte stored in W as hex
 	movwf	LCD_hex_tmp, A

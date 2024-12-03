@@ -21,7 +21,8 @@
       <itemPath>config.s</itemPath>
       <itemPath>LCD.s</itemPath>
       <itemPath>UART.s</itemPath>
-      <itemPath>ACD.s</itemPath>
+      <itemPath>ADC.s</itemPath>
+      <itemPath>Keypad.s</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
