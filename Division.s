@@ -1,74 +1,44 @@
-    #include <xc.inc>
+   
 
-    global AVERAGE_Setup, AVERAGE_Calculate, DIV24_16u
+; *****************************************************************************
+; * Multi-byte Division Algorithm - 24-bit Dividend by 16-bit Divisor         *
+; * Computes Quotient (24-bit) and Remainder (16-bit)                         *
+; *****************************************************************************
 
-    psect udata_acs   ; Reserve data space in Access RAM
-    Freq_values: ds 20     ; Circular buffer for 7 slots (2 bytes each for 16-bit frequency)
-    Sum_H:  ds 1      ; High byte of the sum
-    Sum_M:  ds 1	;Medium byte of sum
-    Sum_L:  ds 1      ; Low byte of the sum
-    Pointer:  ds 1      ; Circular buffer pointer
-    AverageL:  ds 1      ; Average result
-    AverageM:  ds 1
-    AverageH:  ds 1
-    Average_RemH:      ds 1            ; High byte of remainder
-    Average_RemL:      ds 1            ; Low byte of remainder
-    Counter_sum:  ds 1		; Loop counter for summing
-    DIVISOR_H:  ds 1            ; High byte of divisor
-    DIVISOR_L:  ds 1            ; Low byte of divisor
-      
-    TEMP:       ds 1            ; Temporary register
-    COUNT:      ds 1            ; Loop counter, initialized to 24
+    ; *** Data Section Definitions ***
     
-
-    psect average_code, class=CODE
-
-    Average_Setup:
-	clrf    Pointer        ; Initialize the circular pointer to 0
-	clrf    AverageL   ; Clear low byte of the average
-	clrf    AverageH  ; Clear high byte of the average
-	return
-
-    Loading_Loop:
-	movf    Q_L, W                ; Load the low byte of frequency
-	movwf   Freq_values + Pointer 
-	incf    Pointer, F           
-	movf    Q_M, W                ; Load the high byte of frequency 
-	movwf   Freq_values + Pointer             
-
-	; Check if pointer exceeds buffer size (20 for 10 slots × 2 bytes each)
-	movlw   20                        
-	subwf   Pointer, W               
-	btfsc   STATUS, Z   ; If zero, reset the pointer, status bit is only set to 1 if the subtraction leads to 0 or below.
-	goto	Loading_Loop
-	
-	clrf    Pointer, A                    ; Reset pointer to 0
-	
-Sum_Loop:
-
-    movlw   20                        
-    movwf   counter_sum, A
-    movf    Freq_values + Counter - 1, W, A ; Load low byte
-    addwf   Sum_L, F, A          ; Add to the low byte of the sum
-    btfsc   STATUS, C                 ; Check for carry
-    incf    Sum_M, F, A          ; Add carry to the medium byte
-
-    movf    req_values + Counter , W, A ; Load medium byte
-    addwf   Sum_M, F, A          ; Add to the medium byte of the sum
-    btfsc   STATUS, C                 ; Check for carry
-    incf    Sum_H, F, A          ; Add carry to the medium byte
-
-    ; Decrement counter twice and check Counter
-    decf  counter_sum, F, A
-    decfsz counter_sum
-    bra   Sum_Loop
-
-    ; Divide the 24 bit sums by 8 bit (10) but suing 24/16 bit code 
-    ;DIVIDE
+psect   data          ; Define a data section in access RAM
+; Reserve storage for Dividend (24-bit)
+   
+DIV_H      ds 1            ; High byte of dividend
+DIV_M      ds 1            ; Middle byte of dividend
+DIV_L      ds 1            ; Low byte of dividend
     
-Divsion:
+; Reserve storage for Divisor (16-bit)
+DIVISOR_H  ds 1            ; High byte of divisor
+DIVISOR_L  ds 1            ; Low byte of divisor
 
+; Reserve storage for Quotient (24-bit)
+Q_H        ds 1            ; High byte of quotient
+Q_M        ds 1            ; Middle byte of quotient
+Q_L        ds 1            ; Low byte of quotient
+    
     ; Reserve storage for Remainder (16-bit)
+REM_H      ds 1            ; High byte of remainder
+REM_L      ds 1            ; Low byte of remainder
+    
+    ; Reserve storage for Temporary and Counter Registers
+TEMP       ds 1            ; Temporary register
+COUNT      ds 1            ; Loop counter, initialized to 24
+    
+    
+    ; *** Initialization ***
+    
+psect   code                ; Switch to code section
+   
+bsf     T1CON, RD16 ; Set RD16 bit (T1CON<1>)
+
+    
     ; Clear Quotient Registers
 CLRF    Q_H                 ; Clear quotient high byte
 CLRF    Q_M                 ; Clear quotient middle byte
@@ -79,26 +49,29 @@ CLRF    REM_H               ; Clear remainder high byte
 CLRF    REM_L               ; Clear remainder low byte
     
     ; Set up the dividend (2,000,000)
-movlw   Sum_H        ; Load the high byte 
+movlw   0x1E        ; Load the high byte 
 movwf   DIVIDEND_H  ; Store in the high byte register
 
-movlw   Sum_M       ; Load the middle byte 
+movlw   0x84        ; Load the middle byte 
 movwf   DIVIDEND_M  ; Store in the middle byte register
 
-movlw   Sum_L        ; Load the low byte 
+movlw   0x80        ; Load the low byte 
 movwf   DIVIDEND_L  ; Store in the low byte register
 
-MOVLW	0xA		    ; VALUE OF 10
+    
+    ; Step 1: Read TMR1L to latch TMR1H into the buffer
+MOVF    TMR1L, W            ; Move Timer1 Low byte to W
 MOVWF   DIVISOR_L           ; Store in DIVISOR_L
     
-MOVLW	0x0         
+    ; Step 2: Read TMR1H from the buffer
+MOVF    TMR1H, W            ; Move Timer1 High byte from buffer to W
 MOVWF   DIVISOR_H           ; Store in DIVISOR_H
     
-; Initialize Loop Counter to 24 bits since we have a 24 bit divisor 
-MOVLW   24                  ; Load literal value 24 into W
-MOVWF   COUNT               ; Move W to COUNT
+    ; Initialize Loop Counter to 24 bits since we have a 24 bit divisor 
+    MOVLW   24                  ; Load literal value 24 into W
+    MOVWF   COUNT               ; Move W to COUNT
     
-; *** Division Loop Start ***
+    ; *** Division Loop Start ***
     
 Division_Loop:
     
@@ -169,7 +142,9 @@ END_DIVISION:
     ; The Remainder is in REM_H:REM_L
     
     END                         ; End of program
-    
-    
-    
-    return
+
+; *****************************************************************************
+; * End of Multi-byte Division Algorithm                                      *
+; *****************************************************************************
+ 
+	
