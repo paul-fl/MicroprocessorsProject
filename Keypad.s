@@ -12,8 +12,8 @@ Keypad_Value_Col: ds  1
 combineddata: ds 1
 Note1:	ds 1
 Note2:	ds 1
-Target_Freq1: ds 1
-Target_Freq2: ds 1 
+Target_FreqH: ds 1
+Target_FreqL: ds 1 
     
 psect	Keypad_code,class=CODE
 Keypad_Setup:
