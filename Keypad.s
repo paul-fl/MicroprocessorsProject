@@ -4,6 +4,8 @@ global  Keypad_Setup, Keypad_Read, Keypad_Check
 global Note1, Note2
 global Target_FreqH, Target_FreqL
 
+global combineddata, test
+  
 psect	udata_acs   ; reserve data space in access ram
 Keypad_counter: ds    1	    ; reserve 1 byte for variable UART_counter
 Keypad_Value: ds 1
@@ -14,6 +16,8 @@ Note1:	ds 1
 Note2:	ds 1
 Target_FreqH: ds 1
 Target_FreqL: ds 1 
+    
+test: ds 1
     
 psect	Keypad_code,class=CODE
 Keypad_Setup:
@@ -30,10 +34,12 @@ Keypad_Check:
     call	Keypad_Read_Col
     movf	Keypad_Value_Row, W, A
     iorwf	Keypad_Value_Col, W, A
-    movwf	combineddata
     
+    movwf	test
+    movf	test, w
+
     movlw   0xFF                     ; Load 0xFF into W
-    cpfseq  combineddata             ; Compare W with combineddata
+    cpfseq  test             ; Compare W with combineddata
     goto    Pressed   
     goto    NotPressed
 
@@ -51,7 +57,7 @@ Keypad_Read:
     movf	Keypad_Value_Row, W, A
     iorwf	Keypad_Value_Col, W, A
     movwf	PORTD
-    movwf	combineddata
+    movwf	test
     bra		test_E2
     return
     
@@ -80,10 +86,11 @@ Keypad_Read_Col:
    
 test_E2: ; button 1
     movlw   11101110B	
-    cpfseq  combineddata	
+    cpfseq  test	
     bra	    test_A2
     movlw   'E'
     movwf   Note1
+    movf    Note1, w
     movlw    '2'
     movwf   Note2
     movlw   0x00
@@ -95,7 +102,7 @@ test_E2: ; button 1
    
 test_A2:    ;button 2
     movlw   11101101B
-    cpfseq  combineddata	
+    cpfseq  test	
     bra	    test_D3
     movlw   'A'
     movwf   Note1
@@ -109,7 +116,7 @@ test_A2:    ;button 2
     
 test_D3:    ;button 3
     movlw   11101011B	
-    cpfseq  combineddata	
+    cpfseq  test	
     bra	    test_G3
     movlw   'D'
     movwf   Note1
@@ -123,7 +130,7 @@ test_D3:    ;button 3
     
 test_G3: ;button F
     movlw   11100111B	
-    cpfseq  combineddata	
+    cpfseq  test	
     bra	    test_B3
     movlw   'G'
     movwf   Note1
@@ -137,7 +144,7 @@ test_G3: ;button F
     
 test_B3: ;button 4
     movlw   11011110B
-    cpfseq  combineddata
+    cpfseq  test
     bra	    test_E4
     movlw   'B'
     movwf   Note1
@@ -151,7 +158,7 @@ test_B3: ;button 4
     
 test_E4:    ;button 5
     movlw   11011101B
-    cpfseq  combineddata
+    cpfseq  test
     bra	    invalid
     movlw   'E'
     movwf   Note1

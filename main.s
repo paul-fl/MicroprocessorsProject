@@ -87,7 +87,6 @@ prompt_load_loop:
 	call	LCD_Write_Message
 	;call	LCD_Clear_Display
 
-	goto $
 wait_keypad:
 	call	delay
 	call	Keypad_Check	    ;check if the keypad is on '1' or off '0'
