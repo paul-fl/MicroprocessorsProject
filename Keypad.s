@@ -2,6 +2,7 @@
     
 global  Keypad_Setup, Keypad_Read, Keypad_Check
 global Note1, Note2
+global Target_FreqH, Target_FreqL
 
 psect	udata_acs   ; reserve data space in access ram
 Keypad_counter: ds    1	    ; reserve 1 byte for variable UART_counter
@@ -11,6 +12,8 @@ Keypad_Value_Col: ds  1
 combineddata: ds 1
 Note1:	ds 1
 Note2:	ds 1
+Target_Freq1: ds 1
+Target_Freq2: ds 1 
     
 psect	Keypad_code,class=CODE
 Keypad_Setup:
@@ -83,6 +86,11 @@ test_E2: ; button 1
     movwf   Note1
     movlw    '2'
     movwf   Note2
+    movlw   0x00
+    movwf   Target_FreqH
+    movlw   01010010B
+    movwf   Target_FreqL
+    
     return
    
 test_A2:    ;button 2
@@ -93,7 +101,12 @@ test_A2:    ;button 2
     movwf   Note1
     movlw    '2'
     movwf   Note2
+    movlw   0x00
+    movwf   Target_FreqH
+    movlw   01101110B
+    movwf   Target_FreqL
     return
+    
 test_D3:    ;button 3
     movlw   11101011B	
     cpfseq  combineddata	
@@ -102,7 +115,12 @@ test_D3:    ;button 3
     movwf   Note1
     movlw    '3'
     movwf   Note2
+    movlw   0x00
+    movwf   Target_FreqH
+    movlw   10010011B
+    movwf   Target_FreqL
     return
+    
 test_G3: ;button F
     movlw   11100111B	
     cpfseq  combineddata	
@@ -111,7 +129,12 @@ test_G3: ;button F
     movwf   Note1
     movlw    '3'
     movwf   Note2
+    movlw   0x00
+    movwf   Target_FreqH
+    movlw   11000100B
+    movwf   Target_FreqL
     return
+    
 test_B3: ;button 4
     movlw   11011110B
     cpfseq  combineddata
@@ -120,7 +143,12 @@ test_B3: ;button 4
     movwf   Note1
     movlw    '3'
     movwf   Note2
+    movlw   0x00
+    movwf   Target_FreqH
+    movlw   11110111B
+    movwf   Target_FreqL    
     return
+    
 test_E4:    ;button 5
     movlw   11011101B
     cpfseq  combineddata
@@ -129,6 +157,10 @@ test_E4:    ;button 5
     movwf   Note1
     movlw    '4'
     movwf   Note2
+    movlw   00000001B
+    movwf   Target_FreqH
+    movlw   01001010B
+    movwf   Target_FreqL   
     return
 
 invalid:

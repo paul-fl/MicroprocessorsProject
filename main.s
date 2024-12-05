@@ -7,14 +7,27 @@ extrn   Keypad_Setup, Keypad_Read, Keypad_Check	    ; external Keypad subroutine
 extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D, LCD_Clear_Display ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
     
-extrn   Note1, Note2
+extrn   Note1, Note2, Target_FreqH, Target_FreqL
+    
+global	AHigh, Alow, BHigh, Blow, updwn, tarray
+
  
 psect udata_acs 
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:	ds 1    ; reserve one byte for counter in the delay routine
 keypad_status:	ds 1
-target_frequency: ds 1
+target_frequencyL: ds 1
+target_frequencyH: ds 1    
     
+AHigh:      ds 1          ; High byte of A
+ALow:       ds 1          ; Low byte of A
+BHigh:      ds 1          ; High byte of B
+BLow:       ds 1          ; Low byte of B
+updwn:      ds 1          ; Boolean: 1 for up, 0 for down
+
+cblock
+tarray:     ds 20         ; Time array: 10 16-bit values
+endc
     
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
@@ -40,6 +53,10 @@ setup:
 	
 	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
+	
+	movlw	0x00	; initialize updown to 0 at the beginning
+	movwf	updwn
+	
 	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup LCD
 	call	ADC_Setup	; setup ADC
@@ -91,11 +108,28 @@ output_keypad:
 	movf	Note2, w
 	call    LCD_Send_Byte_D 
 	
-frequency_check:
-    
+ADC_Read_Loop:
+    call ADC_Read       ; Call ADC read function (ADRESH, ADRESL)
+    movf updwn, w         ; Move updwn boolean into W
+    cpfseq 0x01         ; Compare W with 0x01 (check for up)
+    BRA detectDown      ; Branch to detectDown if not up
+    BRA detectUp        ; Branch to detectUp if up
     
 
-	
+    
+ 
+
+  
+ calculateArrayFreq:
+    ; Calculate average time
+    ; Calculate frequency
+    ; Call frequency into low function
+    ; Compare with target call function
+    ; Output to LEDs
+    ; Send binary data via UART
+    ; Reset times
+    BRA ADC_Read_Loop
+
 	
 	
 	
