@@ -100,9 +100,9 @@ output_keypad:
 	call	LCD_Clear_Display
 	call    Keypad_Read        ; Read the keypad input
 	
-	movf	Note1, w
+	movf	Note1, w, A
 	call    LCD_Send_Byte_D 
-	movf	Note2, w
+	movf	Note2, w, A
 	call    LCD_Send_Byte_D 
 	
 ADC_Read_Loop:

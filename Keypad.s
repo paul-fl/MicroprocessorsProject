@@ -24,7 +24,7 @@ Keypad_Setup:
     banksel	PADCFG1
     bsf		REPU
     clrf	LATE, A		; Write 0s to the LATE
-    clrf	TRISD
+    clrf	TRISD, A
     return
     
 Keypad_Check:
@@ -35,11 +35,11 @@ Keypad_Check:
     movf	Keypad_Value_Row, W, A
     iorwf	Keypad_Value_Col, W, A
     
-    movwf	test
-    movf	test, w
+    movwf	test, A
+    movf	test, w, A
 
     movlw   0xFF                     ; Load 0xFF into W
-    cpfseq  test             ; Compare W with combineddata
+    cpfseq  test, A             ; Compare W with combineddata
     goto    Pressed   
     goto    NotPressed
 
@@ -56,8 +56,8 @@ Keypad_Read:
     call	Keypad_Read_Col
     movf	Keypad_Value_Row, W, A
     iorwf	Keypad_Value_Col, W, A
-    movwf	PORTD
-    movwf	test
+    movwf	PORTD, A
+    movwf	test, A
     bra		test_E2
     return
     
@@ -86,88 +86,88 @@ Keypad_Read_Col:
    
 test_E2: ; button 1
     movlw   11101110B	
-    cpfseq  test	
+    cpfseq  test, A	
     bra	    test_A2
     movlw   'E'
-    movwf   Note1
-    movf    Note1, w
+    movwf   Note1, A
+    movf    Note1, w, A
     movlw    '2'
-    movwf   Note2
+    movwf   Note2, A
     movlw   0x00
-    movwf   Target_FreqH
+    movwf   Target_FreqH, A
     movlw   01010010B
-    movwf   Target_FreqL
+    movwf   Target_FreqL, A
     
     return
    
 test_A2:    ;button 2
     movlw   11101101B
-    cpfseq  test	
+    cpfseq  test, A
     bra	    test_D3
     movlw   'A'
-    movwf   Note1
+    movwf   Note1, A
     movlw    '2'
-    movwf   Note2
+    movwf   Note2, A
     movlw   0x00
-    movwf   Target_FreqH
+    movwf   Target_FreqH, A
     movlw   01101110B
-    movwf   Target_FreqL
+    movwf   Target_FreqL, A
     return
     
 test_D3:    ;button 3
     movlw   11101011B	
-    cpfseq  test	
+    cpfseq  test, A	
     bra	    test_G3
     movlw   'D'
-    movwf   Note1
+    movwf   Note1, A
     movlw    '3'
-    movwf   Note2
+    movwf   Note2, A
     movlw   0x00
-    movwf   Target_FreqH
+    movwf   Target_FreqH, A
     movlw   10010011B
-    movwf   Target_FreqL
+    movwf   Target_FreqL, A
     return
     
 test_G3: ;button F
     movlw   11100111B	
-    cpfseq  test	
+    cpfseq  test, A	
     bra	    test_B3
     movlw   'G'
-    movwf   Note1
+    movwf   Note1, A
     movlw    '3'
-    movwf   Note2
+    movwf   Note2, A
     movlw   0x00
-    movwf   Target_FreqH
+    movwf   Target_FreqH, A
     movlw   11000100B
-    movwf   Target_FreqL
+    movwf   Target_FreqL, A
     return
     
 test_B3: ;button 4
     movlw   11011110B
-    cpfseq  test
+    cpfseq  test, A
     bra	    test_E4
     movlw   'B'
-    movwf   Note1
+    movwf   Note1, A
     movlw    '3'
-    movwf   Note2
+    movwf   Note2, A
     movlw   0x00
-    movwf   Target_FreqH
+    movwf   Target_FreqH, A
     movlw   11110111B
-    movwf   Target_FreqL    
+    movwf   Target_FreqL, A    
     return
     
 test_E4:    ;button 5
     movlw   11011101B
-    cpfseq  test
+    cpfseq  test, A
     bra	    invalid
     movlw   'E'
-    movwf   Note1
+    movwf   Note1, A
     movlw    '4'
-    movwf   Note2
+    movwf   Note2, A
     movlw   00000001B
-    movwf   Target_FreqH
+    movwf   Target_FreqH, A
     movlw   01001010B
-    movwf   Target_FreqL   
+    movwf   Target_FreqL, A   
     return
 
 invalid:
