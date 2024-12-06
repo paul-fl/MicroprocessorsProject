@@ -167,9 +167,5 @@ END_DIVISION:
     ; move results, clear temp registers
     ; The Quotient is in Q_H:Q_M:Q_L
     ; The Remainder is in REM_H:REM_L
-    
-    END                         ; End of program
-    
-    
-    
+
     return

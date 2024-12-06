@@ -22,12 +22,13 @@ delay_count:	ds 1    ; Reserve one byte for counter in the delay routine
 keypad_status:	ds 1
 ArrayCounter: ds 1  ; Reserve 1 byte for keeping track of position in the frequency array
 
-updown:      ds 1          ; Boolean: 1 for up, 0 for down
+updown:     ds 1          ; Boolean: 1 for up, 0 for down
 AHigh:      ds 1          ; High byte of A
 ALow:       ds 1          ; Low byte of A
 BHigh:      ds 1          ; High byte of B
 BLow:       ds 1          ; Low byte of B
-FreqArray:     ds 20         ; Frequency array: 10 16-bit values
+FreqArray:  ds 20         ; Frequency array: 10 16-bit values
+Spectrum:   ds 10
 
 
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
@@ -181,16 +182,10 @@ CrossingFound:
     bra	    preloop ; This resets the timer
     bra	    arrayOps	; Averages things
     
+preloop:
+    ; //reset timer
     
-    
-    ; Add time to time array at count and count+1
-    ; Increment count by 2
-    incf counter, F, A     ; Increment counter
-    movlw (tarray-2)    ; Check if array is full
-    cpfseq counter, A
-    BRA calculateArrayFreq ; If full, branch to calculateArrayFreq
-    ; Else reset timer
-    BRA ADC_Read_Loop
+    bra ADC_Read_Loop
     
  
 

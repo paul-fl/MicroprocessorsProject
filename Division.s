@@ -2,6 +2,7 @@
 
 
 global DIV_H, DIV_M, DIV_L, DIVISOR_H, DIVISOR_L, Q_H, Q_M, Q_L
+global Division_24_16
     
 psect   data          ; Define a data section in access RAM
 ; Reserve storage for Dividend (24-bit)
@@ -31,9 +32,8 @@ COUNT      ds 1            ; Loop counter, initialized to 24
     ; *** Initialization ***
     
 psect   code                ; Switch to code section
-   
-bsf     T1CON, RD16 ; Set RD16 bit (T1CON<1>)
 
+Division_24_16:
     
     ; Clear Quotient Registers
 CLRF    Q_H                 ; Clear quotient high byte
@@ -44,29 +44,11 @@ CLRF    Q_L                 ; Clear quotient low byte
 CLRF    REM_H               ; Clear remainder high byte
 CLRF    REM_L               ; Clear remainder low byte
     
-    ; Set up the dividend (2,000,000)
-movlw   0x1E        ; Load the high byte 
-movwf   DIVIDEND_H  ; Store in the high byte register
-
-movlw   0x84        ; Load the middle byte 
-movwf   DIVIDEND_M  ; Store in the middle byte register
-
-movlw   0x80        ; Load the low byte 
-movwf   DIVIDEND_L  ; Store in the low byte register
-
-    
-    ; Step 1: Read TMR1L to latch TMR1H into the buffer
-MOVF    TMR1L, W            ; Move Timer1 Low byte to W
-MOVWF   DIVISOR_L           ; Store in DIVISOR_L
-    
-    ; Step 2: Read TMR1H from the buffer
-MOVF    TMR1H, W            ; Move Timer1 High byte from buffer to W
-MOVWF   DIVISOR_H           ; Store in DIVISOR_H
     
     ; Initialize Loop Counter to 24 bits since we have a 24 bit divisor 
-    MOVLW   24                  ; Load literal value 24 into W
-    MOVWF   COUNT               ; Move W to COUNT
-    
+MOVLW   24                  ; Load literal value 24 into W
+MOVWF   COUNT               ; Move W to COUNT
+
     ; *** Division Loop Start ***
     
 Division_Loop:
@@ -137,7 +119,7 @@ END_DIVISION:
     ; The Quotient is in Q_H:Q_M:Q_L
     ; The Remainder is in REM_H:REM_L
     
-    return                       ; End of program
+    return                    
 
 ; *****************************************************************************
 ; * End of Multi-byte Division Algorithm                                      *

@@ -32,3 +32,10 @@ Timer_Read:
     movf    TMR1H, w, A
     movwf   TimerH, A
     return
+    
+Timer_Reset:
+    movlw   0x00
+    movf    TIMRR
+  
+    
+  
