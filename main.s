@@ -7,6 +7,7 @@ extrn	UART_Setup, UART_Transmit_Message   ;external UART subroutines
 extrn   Keypad_Setup, Keypad_Read, Keypad_Check	    ; external Keypad subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D, LCD_Clear_Display ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
+extrn	Timer_Setup, Timer_Read, TurnOnTimer1, TurnOffTimer1		;external timer subroutines
 
 extrn	CompareValues
     
@@ -52,14 +53,18 @@ setup:
 	bsf	EEPGD 	; access Flash program memory
 	
 	movlw	0x00	; initialize updown to 0 at the beginning
-	movwf	updwn
+	movwf	updwn, A
+	movlw   0x00		;set port f to an output
+	movwf   TRISF, A
 	
 	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup LCD
 	call	ADC_Setup	; setup ADC
 	call    Keypad_Setup    ; setup Keypad 
+	call	Timer_Setup	; setup Timer
+	
 	goto	LCD_prompt
-
+	
 LCD_prompt:
 	
 prompt_load:
@@ -90,9 +95,9 @@ prompt_load_loop:
 wait_keypad:
 	call	delay
 	call	Keypad_Check	    ;check if the keypad is on '1' or off '0'
-	movwf	keypad_status
+	movwf	keypad_status, A
 	
-	btfsc	keypad_status, 0
+	btfsc	keypad_status, 0, A
 	goto	output_keypad		;if on, read the keypad
 	goto	wait_keypad		;else keep checking
     
@@ -107,49 +112,50 @@ output_keypad:
 	
 ADC_Read_Loop:
 	call	ADC_Read       ; Call ADC read function (ADRESH, ADRESL)
-	movf	updwn, w         ; Move updwn boolean into W
-	cpfseq	0x01         ; Compare W with 0x01 (check for up)
+	movf	updwn, w, A         ; Move updwn boolean into W
+	cpfseq	0x01, A         ; Compare W with 0x01 (check for up)
 	BRA	detectDown      ; Branch to detectDown if not up
 	BRA	detectUp        ; Branch to detectUp if up
     
 detectUp:
     ; Runs if first up detection is required
-    movf ADRESH, w  ; Set AHigh = ADRESH
-    movwf   AHigh
-    movf ADRESL, w   ; Set ALow = ADRESL
-    movwf   ALow
+    movf ADRESH, w, A  ; Set AHigh = ADRESH
+    movwf   AHigh, A
+    movf ADRESL, w, A   ; Set ALow = ADRESL
+    movwf   ALow, A
     movlw 0x04          ; Set BHigh = 0x04  ;This is our midpoint, 1250 mV
-    movwf BHigh
+    movwf BHigh, A
     movlw 0xE2          ; Set BLow = 0xE2
-    movwf BLow
+    movwf BLow, A
     call CompareValues  ; Compare A and B
-    cpfseq 0x01         ; Skip if W = 1
+    cpfseq 0x01, A         ; Skip if W = 1
     BRA ADC_Read_Loop            ; Not a crossing, return to loop
     BRA CrossingFound   ; Crossing found, branch to handle
     
 detectDown:
     ; Runs if first down detection is required
-    movf ADRESH, w  ; Set BHigh = ADRESH
-    movwf   BHigh
-    movf ADRESL, w   ; Set BLow = ADRESL
-    movwf   BLow
+    movf ADRESH, w, A  ; Set BHigh = ADRESH
+    movwf   BHigh, A
+    movf ADRESL, w, A   ; Set BLow = ADRESL
+    movwf   BLow, A
     movlw 0x04          ; Set AHigh = 0x04
-    movwf AHigh
+    movwf AHigh, A
     movlw 0xE2          ; Set ALow = 0xE2
-    movwf ALow
+    movwf ALow, A
     call CompareValues  ; Compare A and B
-    cpfseq 0x00         ; Skip if W = 0
+    cpfseq 0x00, A         ; Skip if W = 0
     BRA ADC_Read_Loop           ; Not a crossing, return to loop
     BRA CrossingFound   ; Crossing found, branch to handle
     
 CrossingFound:
     ; Crossing detected
-    ; End timer
+    call Timer_Read
+    call TurnOffTimer1
     ; Add time to time array at count and count+1
     ; Increment count by 2
-    incf counter, F     ; Increment counter
+    incf counter, F, A     ; Increment counter
     movlw (tarray-2)    ; Check if array is full
-    cpfseq counter
+    cpfseq counter, A
     BRA calculateArrayFreq ; If full, branch to calculateArrayFreq
     ; Else reset timer
     BRA ADC_Read_Loop
