@@ -1,7 +1,8 @@
 #include <xc.inc>
    
     
-global Timer_Setup, TurnOnTimer1, TurnOffTimer1, Timer_Read
+global Timer_Setup, TurnOnTimer1, TurnOffTimer1, Timer_Read, Timer_Reset
+global TimerH, TimerL
     
 psect	udata_acs
 TimerL: ds 1
@@ -10,8 +11,9 @@ TimerH: ds 1
 psect	Timer_code,class=CODE
 
  ; Set up Timer1 with instruction clock (FOSC/4) as the clock source
+ ;Initialises timer with timer off 
 Timer_Setup:   
-    movlw 00110111
+    movlw 00110110
     movwf T1CON, A
     return
     
@@ -35,7 +37,10 @@ Timer_Read:
     
 Timer_Reset:
     movlw   0x00
-    movf    TIMRR
+    movf    TMR1L, A
+    movlw   0x00
+    movf    TMR1H, A
+    return
   
     
   

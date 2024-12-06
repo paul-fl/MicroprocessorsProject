@@ -25,6 +25,7 @@
       <itemPath>Keypad.s</itemPath>
       <itemPath>Comparrison.s</itemPath>
       <itemPath>Timer.s</itemPath>
+      <itemPath>Division.s</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>

@@ -7,13 +7,14 @@ extrn	UART_Setup, UART_Transmit_Message   ;external UART subroutines
 extrn   Keypad_Setup, Keypad_Read, Keypad_Check	    ; external Keypad subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D, LCD_Clear_Display ; external LCD subroutines
 extrn	ADC_Setup, ADC_Read		   ; external ADC subroutines
-extrn	Timer_Setup, Timer_Read, TurnOnTimer1, TurnOffTimer1		;external timer subroutines
+extrn	Timer_Setup, Timer_Read, TurnOnTimer1, TurnOffTimer1, Timer_Reset		;external timer subroutines
 extrn   Division_24_16
 
 extrn	CompareValues
     
 extrn   Note1, Note2, Target_FreqH, Target_FreqL
 extrn	DIV_H, DIV_M, DIV_L, DIVISOR_H, DIVISOR_L, Q_H, Q_M, Q_L
+extrn	TimerH, TimerL
 
      
 psect udata_acs 
@@ -62,13 +63,13 @@ setup:
 	movwf   TRISF, A
 	
 	movlw	0x00	; Init array counter to 0
-	movwf	
+	movwf	ArrayCounter, A
 	
 	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup LCD
 	call	ADC_Setup	; setup ADC
 	call    Keypad_Setup    ; setup Keypad 
-	call	Timer_Setup	; setup Timer
+	call	Timer_Setup	; setup Timer, timer is off 
 	
 	goto	LCD_prompt
 	
@@ -160,31 +161,31 @@ CrossingFound:
     call    TurnOffTimer1
     ; inputs for division
     movf    TimerH, W, A
-    movwf    Divisor_H, A
+    movwf   DIVISOR_H, A
     movf    TimerL, W, A
-    movwf   Divisor_L, A
+    movwf   DIVISOR_L, A
     movlw   0x1E
-    movwf   DIV_H
+    movwf   DIV_H, A
     movlw   0x84
-    movwf   DIV_M
+    movwf   DIV_M, A
     movlw   0x80
-    movwf   DIV_L
+    movwf   DIV_L, A
     
     call    Division_24_16
-    movlw   Q_M	;Move medium of quotient into high of frequency at correct array element
-    movwf   FreqArray + ArrayCounter  ; Counter begins at 0; HIGH LOW HIGH LOW PATTERN
-    movlw   Q_L	
+    movlw   Q_M, A	;Move medium of quotient into high of frequency at correct array element
+    ;movwf   FreqArray + ArrayCounter  ; Counter begins at 0; HIGH LOW HIGH LOW PATTERN
+    movlw   Q_L, A	
     movwf   FreqArray + ArrayCounter + 1
-    incf    ArrayCounter
-    incf    ArrayCounter
+    incf    ArrayCounter, A
+    incf    ArrayCounter, A
     movlw   0x20    ; Checking if the array is full if countt == length
     cpfseq  ArrayCounter    ; If ==, do averaging operation; else, go to preloop to reset timer for next crossing
     bra	    preloop ; This resets the timer
-    bra	    arrayOps	; Averages things
+    ; bra	    arrayOps ;  Averages things
     
 preloop:
     ; //reset timer
-    
+    call Timer_Reset
     bra ADC_Read_Loop
     
  
