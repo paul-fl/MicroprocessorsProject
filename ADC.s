@@ -11,7 +11,7 @@ ADC_Setup:
 	movlb	0x00
 	movlw   0x01	    ; select AN0 for measurement
 	movwf   ADCON0, A   ; and turn ADC on
-	movlw   0x20	    ; Select 4.096V positive reference
+	movlw   0x20	    ; Select 2.048V positive reference
 	movwf   ADCON1,	A   ; 0V for -ve reference and -ve input
 	movlw   0xF6	    ; Right justified output
 	movwf   ADCON2, A   ; Fosc/64 clock and acquisition times

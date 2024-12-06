@@ -1,23 +1,54 @@
 #include <xc.inc>
     
-global  Keypad_Setup, Keypad_Read
+global  Keypad_Setup, Keypad_Read, Keypad_Check
+global Note1, Note2
+global Target_FreqH, Target_FreqL
 
+global combineddata, test
+  
 psect	udata_acs   ; reserve data space in access ram
 Keypad_counter: ds    1	    ; reserve 1 byte for variable UART_counter
 Keypad_Value: ds 1
 Keypad_Value_Row: ds  1
 Keypad_Value_Col: ds  1
 combineddata: ds 1
+Note1:	ds 1
+Note2:	ds 1
+Target_FreqH: ds 1
+Target_FreqL: ds 1 
     
+test: ds 1
     
 psect	Keypad_code,class=CODE
 Keypad_Setup:
     banksel	PADCFG1
     bsf		REPU
     clrf	LATE, A		; Write 0s to the LATE
-    clrf	TRISD
+    clrf	TRISD, A
     return
     
+Keypad_Check:
+    call	Keypad_Setup_Row
+    call	Keypad_Read_Row
+    call	Keypad_Setup_Col
+    call	Keypad_Read_Col
+    movf	Keypad_Value_Row, W, A
+    iorwf	Keypad_Value_Col, W, A
+    
+    movwf	test, A
+    movf	test, w, A
+
+    movlw   0xFF                     ; Load 0xFF into W
+    cpfseq  test, A             ; Compare W with combineddata
+    goto    Pressed   
+    goto    NotPressed
+
+Pressed:
+    retlw   '1'
+
+NotPressed:
+    retlw   '0'
+ 
 Keypad_Read:
     call	Keypad_Setup_Row
     call	Keypad_Read_Row
@@ -25,9 +56,9 @@ Keypad_Read:
     call	Keypad_Read_Col
     movf	Keypad_Value_Row, W, A
     iorwf	Keypad_Value_Col, W, A
-    movwf	PORTD
-    movwf	combineddata
-    bra		test_1
+    movwf	PORTD, A
+    movwf	test, A
+    bra		test_E2
     return
     
     
@@ -53,90 +84,94 @@ Keypad_Read_Col:
 	movwf	Keypad_Value_Col, A
 	return
    
-test_1:
-    movlw   11100111B	
-    cpfseq  combineddata	
-    bra	    test_2
-    retlw   '1'
-test_2:
-    movlw   11101011B
-    cpfseq  combineddata	
-    bra	    test_3
-    retlw   '2'
-test_3:
-    movlw   11101101B	
-    cpfseq  combineddata	
-    bra	    test_F
-    retlw   '3'
-test_F:
+test_E2: ; button 1
     movlw   11101110B	
-    cpfseq  combineddata	
-    bra	    test_4
-    retlw   'F'
-test_4:
-    movlw   11010111B
-    cpfseq  combineddata	
-    bra	    test_5
-    retlw   '4'	
-test_5:
-    movlw   11101011B
-    cpfseq  combineddata	
-    bra	    test_6
-    retlw   '5'
-test_6:
-    movlw   11011101B	
-    cpfseq  combineddata
-    bra	    test_E
-    retlw   '6'
-test_E:
+    cpfseq  test, A	
+    bra	    test_A2
+    movlw   'E'
+    movwf   Note1, A
+    movf    Note1, w, A
+    movlw    '2'
+    movwf   Note2, A
+    movlw   0x00
+    movwf   Target_FreqH, A
+    movlw   01010010B
+    movwf   Target_FreqL, A
+    
+    return
+   
+test_A2:    ;button 2
+    movlw   11101101B
+    cpfseq  test, A
+    bra	    test_D3
+    movlw   'A'
+    movwf   Note1, A
+    movlw    '2'
+    movwf   Note2, A
+    movlw   0x00
+    movwf   Target_FreqH, A
+    movlw   01101110B
+    movwf   Target_FreqL, A
+    return
+    
+test_D3:    ;button 3
+    movlw   11101011B	
+    cpfseq  test, A	
+    bra	    test_G3
+    movlw   'D'
+    movwf   Note1, A
+    movlw    '3'
+    movwf   Note2, A
+    movlw   0x00
+    movwf   Target_FreqH, A
+    movlw   10010011B
+    movwf   Target_FreqL, A
+    return
+    
+test_G3: ;button F
+    movlw   11100111B	
+    cpfseq  test, A	
+    bra	    test_B3
+    movlw   'G'
+    movwf   Note1, A
+    movlw    '3'
+    movwf   Note2, A
+    movlw   0x00
+    movwf   Target_FreqH, A
+    movlw   11000100B
+    movwf   Target_FreqL, A
+    return
+    
+test_B3: ;button 4
     movlw   11011110B
-    cpfseq  combineddata	
-    bra	    test_7
-    retlw   'E'
-test_7:
-    movlw   10110111B	
-    cpfseq  combineddata	
-    bra	    test_8
-    retlw   '7'
-test_8:
-    movlw   10111011B
-    cpfseq  combineddata	
-    bra	    test_9
-    retlw   '8'
-test_9:
-    movlw   10111101B
-    cpfseq  combineddata	
-    bra	    test_D
-    retlw   '9'
-test_D:
-    movlw   10111110B
-    cpfseq  combineddata	
-    bra	    test_A
-    retlw   'D'
-test_A:
-    movlw   01110111B
-    cpfseq  combineddata	
-    bra	    test_0
-    retlw   'A'
-test_0:
-    movlw   01111011B
-    cpfseq  combineddata	
-    bra	    test_B
-    retlw   '0'
-test_B:
-    movlw   01111101B
-    cpfseq  combineddata	
-    bra	    test_C
-    retlw   'B'
-  
-test_C:
-    movlw   01111110B
-    cpfseq  combineddata	
+    cpfseq  test, A
+    bra	    test_E4
+    movlw   'B'
+    movwf   Note1, A
+    movlw    '3'
+    movwf   Note2, A
+    movlw   0x00
+    movwf   Target_FreqH, A
+    movlw   11110111B
+    movwf   Target_FreqL, A    
+    return
+    
+test_E4:    ;button 5
+    movlw   11011101B
+    cpfseq  test, A
     bra	    invalid
-    retlw   'C'
+    movlw   'E'
+    movwf   Note1, A
+    movlw    '4'
+    movwf   Note2, A
+    movlw   00000001B
+    movwf   Target_FreqH, A
+    movlw   01001010B
+    movwf   Target_FreqL, A   
+    return
 
 invalid:
-    bra	  Keypad_Read  
+    return
     
     
 Keypad_Delay:	    

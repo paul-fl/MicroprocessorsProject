@@ -1,11 +1,7 @@
-   
+#include <xc.inc>   
 
-; *****************************************************************************
-; * Multi-byte Division Algorithm - 24-bit Dividend by 16-bit Divisor         *
-; * Computes Quotient (24-bit) and Remainder (16-bit)                         *
-; *****************************************************************************
 
-    ; *** Data Section Definitions ***
+global DIV_H, DIV_M, DIV_L, DIVISOR_H, DIVISOR_L, Q_H, Q_M, Q_L
     
 psect   data          ; Define a data section in access RAM
 ; Reserve storage for Dividend (24-bit)
@@ -141,7 +137,7 @@ END_DIVISION:
     ; The Quotient is in Q_H:Q_M:Q_L
     ; The Remainder is in REM_H:REM_L
     
-    END                         ; End of program
+    return                       ; End of program
 
 ; *****************************************************************************
 ; * End of Multi-byte Division Algorithm                                      *

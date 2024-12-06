@@ -21,7 +21,10 @@
       <itemPath>config.s</itemPath>
       <itemPath>LCD.s</itemPath>
       <itemPath>UART.s</itemPath>
-      <itemPath>ACD.s</itemPath>
+      <itemPath>ADC.s</itemPath>
+      <itemPath>Keypad.s</itemPath>
+      <itemPath>Comparrison.s</itemPath>
+      <itemPath>Timer.s</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -1134,7 +1137,7 @@
         <property key="debugoptions.debug-startup" value="Use system settings"/>
         <property key="debugoptions.reset-behaviour" value="Use system settings"/>
         <property key="debugoptions.simultaneous.debug" value="false"/>
-        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="debugoptions.useswbreakpoints" value="true"/>
         <property key="event.recorder.enabled" value="false"/>
         <property key="event.recorder.scvd.files" value=""/>
         <property key="freeze.timers" value="false"/>
