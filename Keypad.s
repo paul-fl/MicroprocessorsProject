@@ -2,7 +2,7 @@
     
 global  Keypad_Setup, Keypad_Read, Keypad_Check
 global Note1, Note2
-global Target_FreqH, Target_FreqL
+global targetFreqH, targetFreqL
 
 global combineddata, test
   
@@ -14,8 +14,8 @@ Keypad_Value_Col: ds  1
 combineddata: ds 1
 Note1:	ds 1
 Note2:	ds 1
-Target_FreqH: ds 1
-Target_FreqL: ds 1 
+targetFreqH: ds 1
+targetFreqL: ds 1 
     
 test: ds 1
     
@@ -94,9 +94,9 @@ test_E2: ; button 1
     movlw    '2'
     movwf   Note2, A
     movlw   0x00
-    movwf   Target_FreqH, A
+    movwf   targetFreqH, A
     movlw   01010010B
-    movwf   Target_FreqL, A
+    movwf   targetFreqL, A
     
     return
    
@@ -109,9 +109,9 @@ test_A2:    ;button 2
     movlw    '2'
     movwf   Note2, A
     movlw   0x00
-    movwf   Target_FreqH, A
+    movwf   targetFreqH, A
     movlw   01101110B
-    movwf   Target_FreqL, A
+    movwf   targetFreqL, A
     return
     
 test_D3:    ;button 3
@@ -123,9 +123,9 @@ test_D3:    ;button 3
     movlw    '3'
     movwf   Note2, A
     movlw   0x00
-    movwf   Target_FreqH, A
+    movwf   targetFreqH, A
     movlw   10010011B
-    movwf   Target_FreqL, A
+    movwf   targetFreqL, A
     return
     
 test_G3: ;button F
@@ -137,9 +137,9 @@ test_G3: ;button F
     movlw    '3'
     movwf   Note2, A
     movlw   0x00
-    movwf   Target_FreqH, A
+    movwf   targetFreqH, A
     movlw   11000100B
-    movwf   Target_FreqL, A
+    movwf   targetFreqL, A
     return
     
 test_B3: ;button 4
@@ -151,9 +151,9 @@ test_B3: ;button 4
     movlw    '3'
     movwf   Note2, A
     movlw   0x00
-    movwf   Target_FreqH, A
+    movwf   targetFreqH, A
     movlw   11110111B
-    movwf   Target_FreqL, A    
+    movwf   targetFreqL, A    
     return
     
 test_E4:    ;button 5
@@ -165,9 +165,9 @@ test_E4:    ;button 5
     movlw    '4'
     movwf   Note2, A
     movlw   00000001B
-    movwf   Target_FreqH, A
+    movwf   targetFreqH, A
     movlw   01001010B
-    movwf   Target_FreqL, A   
+    movwf   targetFreqL, A   
     return
 
 invalid:

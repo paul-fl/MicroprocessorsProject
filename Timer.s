@@ -1,7 +1,7 @@
 #include <xc.inc>
    
     
-global Timer_Setup, TurnOnTimer1, TurnOffTimer1, Timer_Read, Timer_Reset
+global Timer_Setup, Timer_On, Timer_Off, Timer_Read, Timer_Reset
 global TimerH, TimerL
     
 psect	udata_acs
@@ -18,12 +18,12 @@ Timer_Setup:
     return
     
 ; Code to turn Timer1 on or off
-TurnOnTimer1:
+Timer_On:
     movlw 00110111
     movwf T1CON, A      ; Set TMR1ON bit to enable Timer1
     return
 
-TurnOffTimer1:
+Timer_Off:
     movlw 00110110
     movwf T1CON, A          ; Clear TMR1ON bit to disable Timer1
     return

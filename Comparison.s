@@ -1,11 +1,11 @@
 #include <xc.inc>
 
-global	CompareValues
+global	Compare_Values
    
 extrn	AHigh, ALow, BHigh, BLow
     
 
-CompareValues:
+Compare_Values:
     ; Checks if A > B; A, B are 16-bit
     movf BHigh, W
     cpfsgt AHigh        ; Compare AHigh with BHigh

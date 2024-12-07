@@ -1,0 +1,142 @@
+{
+    "importedFrom": "file:///c:/Users/Joey/Desktop/Imperial/Work/PHYS60004-TYL/PHYS60004-TYL-Microprocessors/MicroprocessorsProject/MicroprocessorsProject",
+    "version": "1.3",
+    "configurations": [
+        {
+            "name": "default",
+            "id": "conf1",
+            "targetDevice": "PIC18F87K22",
+            "imageType": "application",
+            "imagePath": "./out/Simple1/default.elf",
+            "platformTool": "default-tool-base",
+            "packs": [
+                {
+                    "name": "PIC18F-K_DFP",
+                    "vendor": "Microchip",
+                    "version": "1.8.249"
+                }
+            ],
+            "fileSet": "MPLAB X Virtual Filesystem",
+            "toolchain": "default-XC8"
+        }
+    ],
+    "propertyGroups": [
+        {
+            "name": "default-tool-base",
+            "type": "tool",
+            "properties": {
+                "AutoSelectMemRanges": "auto",
+                "Freeze Peripherals": true,
+                "SecureSegment.SegmentProgramming": "FullChipProgramming",
+                "ToolFirmwareFilePath": "Press to browse for a specific firmware version",
+                "ToolFirmwareOption.UpdateOptions": "ToolFirmwareOption.UseLatest",
+                "ToolFirmwareToolPack": "Press to select which tool pack to use",
+                "communication.activationmode": "nohv",
+                "communication.interface": "",
+                "communication.interface.jtag": "2wire",
+                "communication.speed": "${communication.speed.default}",
+                "debugoptions.debug-startup": "Use system settings",
+                "debugoptions.reset-behaviour": "Use system settings",
+                "debugoptions.simultaneous.debug": false,
+                "debugoptions.useswbreakpoints": true,
+                "event.recorder.enabled": false,
+                "event.recorder.scvd.files": "",
+                "freeze.timers": false,
+                "lastid": "",
+                "memories.aux": false,
+                "memories.bootflash": true,
+                "memories.configurationmemory": true,
+                "memories.configurationmemory2": true,
+                "memories.dataflash": true,
+                "memories.eeprom": true,
+                "memories.exclude.configurationmemory": true,
+                "memories.flashdata": true,
+                "memories.id": true,
+                "memories.instruction.ram.ranges": "${memories.instruction.ram.ranges}",
+                "memories.programmemory": true,
+                "memories.programmemory.ranges": "0-1ffff",
+                "poweroptions.powerenable": false,
+                "programmerToGoImageName": "default_ptg",
+                "programoptions.donoteraseauxmem": false,
+                "programoptions.eraseb4program": true,
+                "programoptions.ledbrightness": "5",
+                "programoptions.pgcconfig": "pull down",
+                "programoptions.pgcresistor.value": "4.7",
+                "programoptions.pgdconfig": "pull down",
+                "programoptions.pgdresistor.value": "4.7",
+                "programoptions.pgmentry.voltage": "high",
+                "programoptions.pgmspeed": "Med",
+                "programoptions.preservedataflash": false,
+                "programoptions.preservedataflash.ranges": "${memories.dataflash.default}",
+                "programoptions.preserveeeprom": false,
+                "programoptions.preserveeeprom.ranges": "0-3ff",
+                "programoptions.preserveprogram.ranges": "",
+                "programoptions.preserveprogramrange": false,
+                "programoptions.preserveuserid": false,
+                "programoptions.program.otpconfig": false,
+                "programoptions.programcalmem": false,
+                "programoptions.programuserotp": false,
+                "programoptions.testmodeentrymethod": "VDDFirst",
+                "ptgProgramImage": true,
+                "ptgSendImage": true,
+                "toolpack.updateoptions": "toolpack.updateoptions.uselatestoolpack",
+                "toolpack.updateoptions.packversion": "Press to select which tool pack to use",
+                "voltagevalue": "3.25"
+            }
+        },
+        {
+            "name": "default-XC8",
+            "type": "toolchain",
+            "provider": "microchip.toolchains:xc8@2.50",
+            "properties": {}
+        }
+    ],
+    "fileSets": [
+        {
+            "name": "Header Files"
+        },
+        {
+            "name": "Important Files",
+            "files": [
+                "Makefile"
+            ],
+            "encoding": "ISO-8859-1"
+        },
+        {
+            "name": "Linker Files"
+        },
+        {
+            "name": "Source Files",
+            "files": [
+                "main.s",
+                "config.s",
+                "LCD.s",
+                "UART.s",
+                "ADC.s",
+                "Keypad.s",
+                "Comparrison.s",
+                "Timer.s",
+                "Division.s"
+            ],
+            "encoding": "ISO-8859-1"
+        },
+        {
+            "name": "MPLAB X Virtual Filesystem",
+            "files": [
+                {
+                    "fileSet": "Header Files"
+                },
+                {
+                    "fileSet": "Important Files"
+                },
+                {
+                    "fileSet": "Linker Files"
+                },
+                {
+                    "fileSet": "Source Files"
+                }
+            ],
+            "encoding": "ISO-8859-1"
+        }
+    ]
+}

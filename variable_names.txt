@@ -1,0 +1,17 @@
+CompareValues --> Compare_Values
+ArrayCounter --> arrayCounter
+TurnOnTimer1 --> Timer_On
+TurnOffTimer1 --> Timer_Off
+ADC_Read_Loop --> ADC_read_loop
+updown -- upDown
+Target_FreqH, Target_FreqL --> targetFreqH/L
+
+
+all external modules A_B
+internal in main a_b
+
+all variables in camel case
+all functions with underscores
+
+NOTE:
+Check Timer_On and Timer_Off bit writes 

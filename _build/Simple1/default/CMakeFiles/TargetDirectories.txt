@@ -1,0 +1,4 @@
+C:/Users/Joey/Desktop/Imperial/Work/PHYS60004-TYL/PHYS60004-TYL-Microprocessors/MicroprocessorsProject/MicroprocessorsProject/_build/Simple1/default/CMakeFiles/Simple1_default_assemble.dir
+C:/Users/Joey/Desktop/Imperial/Work/PHYS60004-TYL/PHYS60004-TYL-Microprocessors/MicroprocessorsProject/MicroprocessorsProject/_build/Simple1/default/CMakeFiles/Simple1_default_default.elf.dir
+C:/Users/Joey/Desktop/Imperial/Work/PHYS60004-TYL/PHYS60004-TYL-Microprocessors/MicroprocessorsProject/MicroprocessorsProject/_build/Simple1/default/CMakeFiles/edit_cache.dir
+C:/Users/Joey/Desktop/Imperial/Work/PHYS60004-TYL/PHYS60004-TYL-Microprocessors/MicroprocessorsProject/MicroprocessorsProject/_build/Simple1/default/CMakeFiles/rebuild_cache.dir
