@@ -1,10 +1,11 @@
 #include <xc.inc>   
+;CONFIG  XINST = OFF           ; Extended Instruction Set (Disabled)
 
 
 global DIV_H, DIV_M, DIV_L, DIVISOR_H, DIVISOR_L, Q_H, Q_M, Q_L
 global Division_24_16
     
-psect   data          ; Define a data section in access RAM
+psect   udata_acs          ; Define a data section in access RAM
 ; Reserve storage for Dividend (24-bit)
    
 DIV_H:      ds 1            ; High byte of dividend
@@ -29,19 +30,19 @@ TEMP:       ds 1            ; Temporary register
 COUNT:      ds 1            ; Loop counter, initialized to 24
     
     
-    ; *** Initialization ***
+		; *** Initialization ***
     
-psect   code                ; Switch to code section
+psect   Division_code,class=CODE                ; Switch to code section
 
 Division_24_16:
     
     ; Clear Quotient Registers
-CLRF    Q_H, A                 ; Clear quotient high byte
-CLRF    Q_M, A                 ; Clear quotient middle byte
-CLRF    Q_L, A                 ; Clear quotient low byte
+CLRF    Q_H, A                ; Clear quotient high byte
+CLRF    Q_M, A                ; Clear quotient middle byte
+CLRF    Q_L, A                ; Clear quotient low byte
     
     ; Clear Remainder Registers
-CLRF    REM_H, A               ; Clear remainder high byte
+CLRF    REM_H, A            ; Clear remainder high byte
 CLRF    REM_L, A               ; Clear remainder low byte
     
     
@@ -53,76 +54,74 @@ MOVWF   COUNT, A               ; Move W to COUNT
     
 Division_Loop:
     
-    ; -------------------------------------------------------------
-    ; 1. Shift Remainder Left by 1 Bit
-    ; -------------------------------------------------------------
-    BCF	     STATUS, 0, A                        ; Clear the Carry flag before shifting
-    RLCF     REM_L, F, A          ; Shift REM_L left, MSB into Carry
-    RLCF     REM_H, F, A            ; Shift REM_H left, incorporating Carry
+; -------------------------------------------------------------
+; 1. Shift Remainder Left by 1 Bit
+; -------------------------------------------------------------
+bcf	STATUS, 0, A           ; Clear the Carry flag before shifting
+rlcf    REM_L, F, A            ; Shift REM_L left, MSB into Carry
+rlcf    REM_H, F, A            ; Shift REM_H left, incorporating Carry
     
-    ; -------------------------------------------------------------
-    ; 2. Bring Down the Next Bit from the Dividend
-    ; -------------------------------------------------------------
-    ; Shift the Dividend left to get the next bit into Carry
-    RLCF     DIV_L, F, A            ; Shift DIV_L left, MSB into Carry
-    RLCF     DIV_M, F, A            ; Shift DIV_M left, incorporating Carry
-    RLCF     DIV_H, F, A            ; Shift DIV_H left, incorporating Carry
-    
-    ; Now, Carry contains the next bit from the Dividend
-    ; Shift the new bit into the LSB of the Remainder
-    RLCF     REM_L, F, A            ; Shift REM_L left, bring in new bit
-    RLCF     REM_H, F, A            ; Shift REM_H left, incorporating Carry
-    
-    ; -------------------------------------------------------------
-    ; 3. Subtract Divisor from Remainder if Possible
-    ; -------------------------------------------------------------
-    ; Attempt to subtract Divisor from Remainder
-    MOVF    DIVISOR_L, W, A        ; Move Divisor Low byte to W
-    SUBWF   REM_L, F, A            ; Subtract W from REM_L, store in REM_L
-    MOVF    DIVISOR_H, W, A        ; Move Divisor High byte to W
-    SUBWFB  REM_H, F, A            ; Subtract W and Borrow from REM_H, store in REM_H
-    
-    ; Check if subtraction resulted in a negative value (Borrow occurred)
-    BTFSC   STATUS, 0, A          ; If Carry is set, no Borrow occurred
-    GOTO    Set_Carry_For_Quotient   ; Proceed to set quotient bit
-    
-    ; Subtraction failed; restore original Remainder
-    MOVF    DIVISOR_L, W, A        ; Move Divisor Low byte to W
-    ADDWF   REM_L, F, A            ; Add W back to REM_L to restore
-    MOVF    DIVISOR_H, W, A        ; Move Divisor High byte to W
-    ADDWFC  REM_H, F, A            ; Add W and Carry back to REM_H to restore
-    
-    BCF	    STATUS, 0, A                       ; Clear Carry flag (Quotient bit = 0)
-    GOTO    Shift_Quotient      ; Proceed to shift quotient
-    
-Set_Carry_For_Quotient:
-    BSF     STATUS, 0, A         ; Set Carry flag (Quotient bit = 1)
-    
-Shift_Quotient:
-    ; -------------------------------------------------------------
-    ; 4. Shift Quotient Left by 1 Bit and Incorporate New Bit
-    ; -------------------------------------------------------------
-    RLCF     Q_L, F, A              ; Shift Q_L left, MSB into Carry
-    RLCF     Q_M, F, A              ; Shift Q_M left, incorporating Carry
-    RLCF     Q_H, F, A              ; Shift Q_H left, incorporating Carry
-    
-    ; -------------------------------------------------------------
-    ; 5. Loop Control
-    ; -------------------------------------------------------------
-    DECFSZ  COUNT, F, A            ; Decrement COUNT; if zero, exit loop
-    GOTO    Division_Loop       ; Repeat loop for next bit
-    
-    ; *** Division Complete ***
-    
-END_DIVISION:
-    ; move results, clear temp registers
-    ; The Quotient is in Q_H:Q_M:Q_L
-    ; The Remainder is in REM_H:REM_L
-    
-    return                    
+;LSB of the remainder is now 0
+      
+; -------------------------------------------------------------
+; 2. Bring Down the Next Bit from the Dividend
+; -------------------------------------------------------------
+; Shift the Dividend left to get the next bit into Carry
+bcf	 STATUS, 0, A           ; Clear the Carry flag before shifting
+rlcf     DIV_L, F, A            ; Shift DIV_L left, MSB into Carry
+rlcf     DIV_M, F, A            ; Shift DIV_M left, incorporating Carry
+rlcf     DIV_H, F, A            ; Shift DIV_H left, incorporating Carry
+;carry at this point contains the MSB of the dividend 
 
-; *****************************************************************************
-; * End of Multi-byte Division Algorithm                                      *
-; *****************************************************************************
- 
-	
+;if the MSB is 1: set the least significant bit of the remainder to 1
+;otherwise leave it be 0
+;we effectively shift the MSB of the dividend into the LSB of the carry
+
+btfsc   STATUS, 0, A
+bsf     REM_L, 0, A
+
+; -------------------------------------------------------------
+; 3. Compare with Divisor and Possibly Subtract
+; -------------------------------------------------------------
+; Attempt remainder = remainder - divisor
+
+movf    DIVISOR_L, W, A
+subwf   REM_L, F, A
+    
+;the carry bit in the STATUS register will be cleared to indicate a borrow occurred
+movf    DIVISOR_H, W, A
+subwfb  REM_H, F, A
+    
+; If no borrow occurred, remainder >= divisor, so remainder is updated and quotient bit = 1
+; If borrow occurred, remainder < divisor, restore remainder and quotient bit = 0
+btfsc   STATUS, 0, A    ; C=1 means no borrow
+goto    No_Borrow
+    
+; Borrow occurred -> restore remainder
+movf    DIVISOR_L, W, A
+addwf   REM_L, F, A
+movf    DIVISOR_H, W, A
+addwfc  REM_H, F, A
+bcf     STATUS, 0, A    ; Set carry=0 to indicate quotient bit = 0
+goto    Set_Quotient_Bit
+
+No_Borrow:
+    ; No borrow -> remainder is already adjusted and carry=1
+bsf     STATUS, 0, A
+    
+Set_Quotient_Bit:
+; -------------------------------------------------------------
+; 4. Shift Quotient Left and Incorporate New Bit
+; -------------------------------------------------------------
+; The carry flag now holds the new quotient bit
+rlcf    Q_L, F, A
+rlcf    Q_M, F, A
+rlcf    Q_H, F, A
+
+; -------------------------------------------------------------
+; 5. Loop Control
+; -------------------------------------------------------------
+decfsz  COUNT, F, A
+goto    Division_Loop
+    
+return 

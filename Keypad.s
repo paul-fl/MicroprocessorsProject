@@ -1,6 +1,6 @@
 #include <xc.inc>
     
-global  Keypad_Setup, Keypad_Read, Keypad_Check
+global Keypad_Setup, Keypad_Read, Keypad_Check
 global Note1, Note2
 global targetFreqH, targetFreqL
 

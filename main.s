@@ -2,7 +2,9 @@
 
 ; Initialise 
 ; Define global variables to be used by comparison
-global	AHigh, ALow, BHigh, BLow    
+global	AHigh, ALow, BHigh, BLow 
+; Define frequency array to be used by averaging
+global	FreqArray
     
 ; UART subroutines
 extrn	UART_Setup, UART_Transmit_Message   
@@ -27,6 +29,7 @@ extrn	Compare_Values
 extrn   Note1, Note2, targetFreqH, targetFreqL
 extrn	DIV_H, DIV_M, DIV_L, DIVISOR_H, DIVISOR_L, Q_H, Q_M, Q_L
 extrn	TimerH, TimerL
+extrn	AverageH, AverageL
 
      
 psect udata_acs 
@@ -61,7 +64,7 @@ rst:	org 0x0
     goto    setup
 
 int_hi:	org 0x0008
-    goto	interrupt_handler 
+;    goto	interrupt_handler 
  
 setup:	
     bcf	    CFGS	; Point to Flash program memory  
@@ -162,12 +165,12 @@ detect_down:
     
 up_crossing_found:
     movlw   0x00
-    movwf   upDown  ; It will now look for a down
+    movwf   upDown, A  ; It will now look for a down
     bra	    crossing_found
 
 down_crossing_found:
     movlw   0x01
-    movwf   upDown  ; It will now look for an up
+    movwf   upDown, A ; It will now look for an up
     bra	    crossing_found
     
 crossing_found:	; Crossing detected
@@ -191,15 +194,15 @@ crossing_found:	; Crossing detected
     ; Move the frequency (quotient) into FreqArray
 	; Freq in 0-500 range means 9 bit (round to 16 bit) number
 	; Store high and low bit in high low high low pattern
-    
-    movlw   Q_M, A  ; Move medium of quotient into freq high position
-    movwf   FreqArray + arrayCounter  ; Counter begins at 0
-    movlw   Q_L, A  ; Quotient low is frequency low
-    movwf   FreqArray + arrayCounter + 1    ; Put into position after high byte
+   
+    movf    Q_M, W, A  ; Move medium of quotient into freq high position
+    movwf   FreqArray + arrayCounter, A  ; Counter begins at 0
+    movf    Q_L, W, A  ; Quotient low is frequency low
+    movwf   FreqArray + arrayCounter + 1, A  ; Put into position after high byte
     incf    arrayCounter, A ; Because dealing with 2 byte chunks, inc by 2
     incf    arrayCounter, A
     movlw   0x20    ; Checking if the array is full if count == length
-    cpfseq  arrayCounter    ; If ==, do averaging operation; else, go to preloop to reset timer for next crossing
+    cpfseq  arrayCounter, A    ; If ==, do averaging operation; else, go to preloop to reset timer for next crossing
     bra	    preloop	; This resets the timer and starts next detection
     bra	    array_ops	; Averages things
     
@@ -215,51 +218,51 @@ array_ops: ; Performs all calculations on array to get frequency and on the freq
 LED_output: ; Outputs sharp, flat, and in-tune ot PORTF
     ; Assume 2 Hz uncertainty around target
     ; Is A (av freq) > B (target + 2)? Yes is sharp; else check lower bound
-    movlw   averageHigh, A
-    movwf   AHigh
-    movlw   averageLow, A
-    movwf   ALow
-    movlw   targetFreqH, A
-    movwf   BHigh
-    movlw   targetFreqL, A
-    movwf   BLow
+    movf   AverageH, W, A
+    movwf   AHigh, A
+    movf   AverageL, W, A
+    movwf   ALow, A
+    movf   targetFreqH, W, A
+    movwf   BHigh, A
+    movf   targetFreqL, W,  A
+    movwf   BLow, A
     ; w/ possible target freqs, \pm 2 will not roll over to high --> BLow only
     movlw   0x02
-    addwf   BLow    ; Adds the 2 Hz to the upper bound
+    addwf   BLow, A    ; Adds the 2 Hz to the upper bound
     call    Compare_Values  ; retw 1 if sharp, else more checks
-    cpfseq  0x01    ; Skips if sharp (==1)
+    cpfseq  0x01, A    ; Skips if sharp (==1)
     bra	    check_flat	; More checks to determine if is flat or tuned
     bra	    sharp   ; Outputs sharp to PORTF
     
 check_flat: ; Part of LED_output
     ; Only occurs if freq is less than top band
     ; Is A (av freq) > B (target - 2)? Yes is tuned; else flat
-    movlw   averageHigh, A
-    movwf   AHigh
-    movlw   averageLow, A
-    movwf   ALow
-    movlw   targetFreqH, A
-    movwf   BHigh
-    movlw   targetFreqL, A
-    movwf   BLow
+    movf   AverageH, W, A
+    movwf   AHigh, A
+    movf   AverageL, W, A
+    movwf   ALow, A
+    movf    targetFreqH, W,  A
+    movwf   BHigh, A
+    movf    targetFreqL, W, A
+    movwf   BLow, A
     ; w/ possible target freqs, \pm 2 will not roll over to high --> BLow only
-    subwf   BLow    ; Subtract 2 from BLow
+    subwf   BLow, A    ; Subtract 2 from BLow
     call    Compare_Values  ; retw 1 if in-tune, less than means flat
-    cpfseq  0x01    ; Skips if in-tune
+    cpfseq  0x01, A    ; Skips if in-tune
     bra	    flat
     bra	    tuned
     
 sharp: ; Runs if sharp detected
     movlw   00000100B
-    movwf   PORTF   ; Outputs to LED
+    movwf   PORTF, A   ; Outputs to LED
     bra	    array_ops2    
 flat:
     movlw   00000001B
-    movwf   PORTF   ; Outputs to LED
+    movwf   PORTF, A   ; Outputs to LED
     bra	    array_ops2
 tuned:
     movlw   00000010B
-    movwf   PORTF   ; Outputs to LED
+    movwf   PORTF, A   ; Outputs to LED
     bra	    array_ops2
     
 array_ops2: 
@@ -274,16 +277,16 @@ array_ops2:
     movwf   DIVISOR_L, A
     movlw   0x00	    ; Numerator is average frequency
     movwf   DIV_H, A
-    movf    averageHigh, W, A	; averageHigh can be mid here
+    movf    AverageH, W, A	; averageHigh can be mid here
     movwf   DIV_M, A
-    movf    averageLow, W, A	; averageLow is low (duh!)
+    movf    AverageL, W, A	; averageLow is low (duh!)
     movwf   DIV_L, A
     
     call    Division_24_16  ; Calls the division --> Q_H, Q_M, Q_L
     ; The quotient will be only in low
     
     ; Increment relevant bin by one
-    incf    Spectrum + Q_L
+    incf    Spectrum + Q_L, A
     
     ; ### bra to UART export code for spectrum
    
@@ -298,14 +301,7 @@ array_ops2:
     
 
     
-    
- 
-
-  
-
-
-	
-	
+   
 	
 	
 
