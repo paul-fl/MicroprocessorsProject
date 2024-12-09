@@ -38,6 +38,7 @@ delay_count:	ds 1    ; Reserve one byte for counter in the delay routine
 keypad_status:	ds 1
 arrayCounter:	ds 1	; Reserve 1 byte for keeping track of position in the frequency array
 
+CompareBoolean:	ds 1
 upDown:		ds 1        ; Boolean: 1 for up, 0 for down
 AHigh:	        ds 1        ; High byte of A
 ALow:		ds 1        ; Low byte of A
@@ -116,9 +117,14 @@ wait_keypad:
     goto    wait_keypad		; Else keep checking
     
 output_keypad:
-    call    LCD_Clear_Display
     call    Keypad_Read        ; Read the keypad input
 
+    movlw   'N'
+    cpfseq  Note1, A
+    bra	    valid
+    bra	    wait_keypad
+ valid:
+    call    LCD_Clear_Display
     movf    Note1, w, A
     call    LCD_Send_Byte_D 
     movf    Note2, w, A
@@ -128,8 +134,9 @@ call Timer_On	; Initial timer on before loop starts
     
 ADC_read_loop:
     call    ADC_Read        ; Call ADC read function (ADRESH, ADRESL)
-    movf    upDown, w, A    ; Move updown boolean into W
-    cpfseq  0x01, A         ; Compare W with 0x01 (check for up)
+    ;movf    upDown, w, A    ; Move updown boolean into W
+    movlw   0x01
+    cpfseq  upDown, A         ; Compare W with 0x01 (check for up)
     bra	    detect_down      ; Branch to detectDown if not up
     bra	    detect_up        ; Branch to detectUp if up
     
@@ -144,7 +151,9 @@ detect_up:
     movlw   0xE2	    ; Set BLow = 0xE2
     movwf   BLow, A
     call    Compare_Values  ; Compare A and B
-    cpfseq  0x01, A         ; Skip if W = 1
+    movwf   CompareBoolean, A  ; Moves boolean returned into CompareBoolean
+    movlw   0x01
+    cpfseq  CompareBoolean, A	     ; Skip if W = 1
     bra	    ADC_read_loop   ; Not a crossing, return to loop
     bra	    up_crossing_found   ; Crossing found, branch to handle
     
@@ -159,7 +168,9 @@ detect_down:
     movlw   0xE2	    ; Set ALow = 0xE2
     movwf   ALow, A
     call    Compare_Values  ; Compare A and B
-    cpfseq  0x00, A         ; Skip if W = 0
+    movwf   CompareBoolean, A  ; Moves boolean returned into CompareBoolean
+    movlw   0x00
+    cpfseq  CompareBoolean, A	     ; Skip if W = 0
     bra	    ADC_read_loop   ; Not a crossing, return to loop
     bra	    down_crossing_found   ; Crossing found, branch to handle
     
@@ -291,22 +302,7 @@ array_ops2:
     ; ### bra to UART export code for spectrum
    
     bra	    preloop ; Resets timer to get ready for next reading
-    
-    
-    
-    
-    
-    
-    
-    
 
-    
-   
-	
-	
-
-
-	
 delay:	
 	decfsz	delay_count, A	; decrement until zero
 	bra	delay

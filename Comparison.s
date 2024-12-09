@@ -4,6 +4,7 @@ global	Compare_Values
    
 extrn	AHigh, ALow, BHigh, BLow
     
+psect	Keypad_code,class=CODE
 
 Compare_Values:
     ; Checks if A > B; A, B are 16-bit

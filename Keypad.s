@@ -171,6 +171,10 @@ test_E4:    ;button 5
     return
 
 invalid:
+    movlw   'N'
+    movwf   Note1, A
+    movlw   'A'
+    movwf   Note2, A
     return
     
     
