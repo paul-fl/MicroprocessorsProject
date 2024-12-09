@@ -30,6 +30,7 @@ extrn   Note1, Note2, targetFreqH, targetFreqL
 extrn	DIV_H, DIV_M, DIV_L, DIVISOR_H, DIVISOR_L, Q_H, Q_M, Q_L
 extrn	TimerH, TimerL
 extrn	AverageH, AverageL
+global	arrayCounter, FreqArray
 
      
 psect udata_acs 
