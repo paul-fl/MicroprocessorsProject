@@ -31,14 +31,15 @@ extrn   Note1, Note2, targetFreqH, targetFreqL
 extrn	DIV_H, DIV_M, DIV_L, DIVISOR_H, DIVISOR_L, Q_H, Q_M, Q_L
 extrn	TimerH, TimerL
 extrn	AverageH, AverageL
-global	arrayCounter, FreqArray
+global	arrayPointer, arrayLength, FreqArray
 
      
 psect udata_acs 
 counter:	ds 1    ; Reserve one byte for a counter variable
 delay_count:	ds 1    ; Reserve one byte for counter in the delay routine
 keypad_status:	ds 1
-arrayCounter:	ds 1	; Reserve 1 byte for keeping track of position in the frequency array
+arrayPointer:	ds 1	; Reserve 1 byte for keeping track of position in the frequency array
+arrayLength:	ds 1
 
 CompareBoolean:	ds 1
 upDown:		ds 1        ; Boolean: 1 for up, 0 for down
@@ -76,14 +77,20 @@ setup:
     movwf   upDown, A
     movlw   0x00	; Set PORTF to an output
     movwf   TRISH, A
-    movlw   0x00	; Init array counter to 0
-    movwf   arrayCounter, A
+    movlw   20 ; for 10 16 bit numbers 
+    movwf   arrayLength, A	;length of the array   
+    movlw   FreqArray	;Moves the address of frequency array into the arrayPointer  
+    movwf   arrayPointer, A    
+    movlw   FreqArray
+    addwf   arrayLength, A ;gives the endpoint of the array
+    incf    arrayLength ;condition checks for one after length position 
     
     call    UART_Setup	; setup UART
     call    LCD_Setup	; setup LCD
     call    ADC_Setup	; setup ADC
     call    Keypad_Setup    ; setup Keypad 
     call    Timer_Setup	; setup Timer, timer is off 
+   
 	
 ; LCD_Prompt
     
@@ -208,14 +215,24 @@ crossing_found:	; Crossing detected
 	; Freq in 0-500 range means 9 bit (round to 16 bit) number
 	; Store high and low bit in high low high low pattern
    
+    ;start by putting the address of arrayPointer into FSR0
+    ;arrayPointer is initialised to the beginning of FreqArray
+    movlw   0x00
+    movwf   FSR0H
+    movf    arrayPointer, W, A
+    movwf   FSR0L
+    ;now write our value into the array
     movf    Q_M, W, A  ; Move medium of quotient into freq high position
-    movwf   FreqArray + arrayCounter, A  ; Counter begins at 0
+    movwf   INDF0
+    incf    arrayPointer, A
+    movf    arrayPointer, W, A
+    movwf   FSR0L
     movf    Q_L, W, A  ; Quotient low is frequency low
-    movwf   FreqArray + arrayCounter + 1, A  ; Put into position after high byte
-    incf    arrayCounter, A ; Because dealing with 2 byte chunks, inc by 2
-    incf    arrayCounter, A
-    movlw   20   ; Checking if the array is full if count == length ; I think there is an error here, we are trying to get to 20 in decimal, which would correspond to 14 in hex
-    cpfseq  arrayCounter, A    ; If ==, do averaging operation; else, go to preloop to reset timer for next crossing
+    movwf   INDF0
+    incf    arrayPointer, A ;so that the next time we loop we are at the correct position 
+    ; if the array is full we want to go to array ops, if not we want to go to pre loop
+    movf  arrayLength, W, A
+    cpfseq  arrayPointer ;f equal do averaging operation else, go to preloop to reset timer for next crossing
     bra	    preloop	; This resets the timer and starts next detection
     bra	    array_ops	; Averages things
     
@@ -311,7 +328,7 @@ array_ops2:
     bra	    preloop ; Resets timer to get ready for next reading
 
 delay:	
-	decfsz	delay_count, A	; decrements until zero
+	decfsz	delay_count, A	; decrement until zero
 	bra	delay
 	return
 
