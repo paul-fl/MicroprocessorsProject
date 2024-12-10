@@ -10,7 +10,7 @@ Compare_Values:
     ; Checks if A > B; A, B are 16-bit
 
     movf BHigh, W, A
-    cpfsgt AHigh        ; Compare AHigh with BHigh
+    cpfsgt AHigh, A        ; Compare AHigh with BHigh
     BRA CheckBHighGreater
     retlw 1             ; Return 1 if A > B
     

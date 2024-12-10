@@ -3,7 +3,7 @@
 
 extrn	DIV_H, DIV_M, DIV_L, DIVISOR_H, DIVISOR_L, Q_H, Q_M, Q_L
 extrn	Division_24_16
-global	array_ops, FreqArray, AverageH, AverageL
+global	Averaging, FreqArray, AverageH, AverageL
     
 
 
@@ -23,16 +23,18 @@ AverageRemL:      ds 1            ; Low byte of remainder
 DivisorH:  ds 1            ; High byte of divisor
 DivisorL:  ds 1            ; Low byte of divisor
 
-CounterSum:      ds 1            ; Loop counter, initialized to 24
-
+CounterSum:      ds 1            ; Loop counter
+global	CounterSum
 
 psect average_code, class=CODE
 
 
-array_ops:
+Averaging:
 
     movlw   20                        
     movwf   CounterSum, A
+ AveragingLoop:
+    
     movf    FreqArray + CounterSum - 1, W, A	; Load low byte
     addwf   DIV_H, F, A          ;  Add to the low byte of the sum
     btfsc   STATUS, 0, A 			; Check for carry
@@ -46,7 +48,7 @@ array_ops:
     ; Decrement counter twice and check Counter
     decf    CounterSum, F, A
     decfsz  CounterSum, A
-    bra	    array_ops
+    bra	    AveragingLoop
     bra	    Division
 
 ; Divide the 24 bit sums by 4 bit (10) but suing 24/16 bit code 
@@ -58,9 +60,9 @@ Division:
     movlw   0xA
     movwf   DIVISOR_L, A
     call    Division_24_16
-    movf    Q_M, W
+    movf    Q_M, W, A
     movwf   AverageH, A
-    movf    Q_L, W
+    movf    Q_L, W, A
     movwf   AverageL, A
     
     return

@@ -24,6 +24,7 @@ extrn	Timer_Setup, Timer_Read, Timer_On, Timer_Off, Timer_Reset
 ; 16 bit arithmetic and logic functions
 extrn   Division_24_16
 extrn	Compare_Values
+extrn	Averaging
 
 ; Various external variables
 extrn   Note1, Note2, targetFreqH, targetFreqL
@@ -74,7 +75,7 @@ setup:
     movlw   0x00	; Initialize updown to 0 at the beginning
     movwf   upDown, A
     movlw   0x00	; Set PORTF to an output
-    movwf   TRISF, A
+    movwf   TRISH, A
     movlw   0x00	; Init array counter to 0
     movwf   arrayCounter, A
     
@@ -213,7 +214,7 @@ crossing_found:	; Crossing detected
     movwf   FreqArray + arrayCounter + 1, A  ; Put into position after high byte
     incf    arrayCounter, A ; Because dealing with 2 byte chunks, inc by 2
     incf    arrayCounter, A
-    movlw   0x20    ; Checking if the array is full if count == length
+    movlw   20   ; Checking if the array is full if count == length ; I think there is an error here, we are trying to get to 20 in decimal, which would correspond to 14 in hex
     cpfseq  arrayCounter, A    ; If ==, do averaging operation; else, go to preloop to reset timer for next crossing
     bra	    preloop	; This resets the timer and starts next detection
     bra	    array_ops	; Averages things
@@ -225,6 +226,7 @@ preloop:
     
 array_ops: ; Performs all calculations on array to get frequency and on the frequency
     ; AVERAGE THE ARRAY ### Assuming output is in averageHigh and averageLow
+    call    Averaging
     bra	LED_output  ; Compares the average to target and outputs to LEDs
     
 LED_output: ; Outputs sharp, flat, and in-tune ot PORTF
@@ -242,7 +244,9 @@ LED_output: ; Outputs sharp, flat, and in-tune ot PORTF
     movlw   0x02
     addwf   BLow, A    ; Adds the 2 Hz to the upper bound
     call    Compare_Values  ; retw 1 if sharp, else more checks
-    cpfseq  0x01, A    ; Skips if sharp (==1)
+    movwf   CompareBoolean, A
+    movlw   0x01
+    cpfseq  CompareBoolean, A    ; Skips if sharp (==1)
     bra	    check_flat	; More checks to determine if is flat or tuned
     bra	    sharp   ; Outputs sharp to PORTF
     
@@ -260,21 +264,23 @@ check_flat: ; Part of LED_output
     ; w/ possible target freqs, \pm 2 will not roll over to high --> BLow only
     subwf   BLow, A    ; Subtract 2 from BLow
     call    Compare_Values  ; retw 1 if in-tune, less than means flat
-    cpfseq  0x01, A    ; Skips if in-tune
+    movwf   CompareBoolean, A
+    movlw   0x01
+    cpfseq  CompareBoolean, A    ; Skips if in-tune
     bra	    flat
     bra	    tuned
     
 sharp: ; Runs if sharp detected
     movlw   00000100B
-    movwf   PORTF, A   ; Outputs to LED
+    movwf   LATH, A   ; Outputs to LED
     bra	    array_ops2    
 flat:
     movlw   00000001B
-    movwf   PORTF, A   ; Outputs to LED
+    movwf   LATH, A   ; Outputs to LED
     bra	    array_ops2
 tuned:
     movlw   00000010B
-    movwf   PORTF, A   ; Outputs to LED
+    movwf   LATH, A   ; Outputs to LED
     bra	    array_ops2
     
 array_ops2: 
