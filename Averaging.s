@@ -70,7 +70,7 @@ AveragingLoop:
     
     movlw   0x10
     movwf   INDF0
-
+    
     ; Decrement counter twice and check Counter
     incf    Pointer, F, A
     movf    Length, W
