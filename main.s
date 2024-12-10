@@ -311,7 +311,7 @@ array_ops2:
     bra	    preloop ; Resets timer to get ready for next reading
 
 delay:	
-	decfsz	delay_count, A	; decrement until zero
+	decfsz	delay_count, A	; decrements until zero
 	bra	delay
 	return
 
