@@ -24,9 +24,11 @@ AveragingTest:
     movwf   FreqArray, A
     movwf   FreqArray + 2, A
     movwf   FreqArray + 4, A
-    movlw   1
+    movlw   7
     movwf   FreqArray + 1, A
+    movlw   8
     movwf   FreqArray + 3, A
+    movlw   9
     movwf   FreqArray + 5, A
     
     

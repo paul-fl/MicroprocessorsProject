@@ -68,9 +68,6 @@ AveragingLoop:
     btfsc   STATUS, 0, A                  ; Check for carry
     incf    DIV_M, F, A          ; Add carry to the medium byte
     
-    movlw   0x10
-    movwf   INDF0
-    
     ; Decrement counter twice and check Counter
     incf    Pointer, F, A
     movf    Length, W
