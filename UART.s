@@ -1,11 +1,11 @@
 #include <xc.inc>
     
-global  UART_Setup, UART_Transmit_Message
+global  UART_Setup, UART_Transmit_Message, UART_Transmit_Byte
 
 psect	udata_acs   ; reserve data space in access ram
 UART_counter: ds    1	    ; reserve 1 byte for variable UART_counter
 
-psect	uart_code,class=CODE
+psect	uart_code, class=CODE
 UART_Setup:
     bsf	    SPEN	; enable
     bcf	    SYNC	; synchronous
