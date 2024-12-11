@@ -23,8 +23,10 @@ AverageRemL:      ds 1            ; Low byte of remainder
 DivisorH:  ds 1            ; High byte of divisor
 DivisorL:  ds 1            ; Low byte of divisor
 
-CounterSum:      ds 1            ; Loop counter
-global	CounterSum
+Length:      ds 1            ; Loop counter
+Pointer:    ds 1
+    
+global	Pointer, Length
 
 psect average_code, class=CODE
 
@@ -32,24 +34,47 @@ psect average_code, class=CODE
 Averaging:
 
     movlw   20                        
-    movwf   CounterSum, A
- AveragingLoop:
-    
-    movf    FreqArray + CounterSum - 1, W, A	; Load low byte
-    addwf   DIV_H, F, A          ;  Add to the low byte of the sum
+    movwf   Length, A
+    clrf    DIV_H, A
+    clrf    DIV_M, A
+    clrf    DIV_L, A
+    clrf    DIVISOR_H, A
+    clrf    DIVISOR_L, A
+    clrf    AverageH, A
+    clrf    AverageL, A
+    movlw   FreqArray	; Moves FreqArray's address into Pointer
+    movwf   Pointer, A
+    movlw   FreqArray
+    addwf   Length, A  ; This gives the endpoint of the array
+    incf    Length, A  ; The condition checks for one after length position
+    incf    Length, A
+ 
+AveragingLoop:
+    movlw   0x00
+    movwf   FSR0H
+    movf    Pointer, W, A   ; Load high byte into nedium
+    movwf   FSR0L
+    movf    INDF0, W, A
+    addwf   DIV_M, F, A          ;  Add to the medium byte of the sum
     btfsc   STATUS, 0, A 			; Check for carry
-    incf    DIV_M, F, A          ;  Add carry to the medium byte
+    incf    DIV_H, F, A          ;  Add carry to the high byte
 
-    movf    FreqArray + CounterSum , W, A ; Load medium byte
-    addwf   DIV_M, F, A          ; Add to the medium byte of the sum
+    movlw   0x00
+    movwf   FSR0H
+    incf    Pointer, F, A
+    movf    Pointer, W, A	; Load low byte
+    movwf   FSR0L
+    movf    INDF0, W, A
+    addwf   DIV_L, F, A          ; Add to the low byte of the sum
     btfsc   STATUS, 0, A                  ; Check for carry
-    incf    DIV_H, F, A          ; Add carry to the high byte
-
+    incf    DIV_M, F, A          ; Add carry to the medium byte
+    
     ; Decrement counter twice and check Counter
-    decf    CounterSum, F, A
-    decfsz  CounterSum, A
-    bra	    AveragingLoop
-    bra	    Division
+    incf    Pointer, F, A
+    movf    Length, W, A
+    cpfseq  Pointer, A ; If pointer == W (Length), skip
+    bra	    AveragingLoop   ; Adds next value
+    bra	    Division	; Full so do division
 
 ; Divide the 24 bit sums by 4 bit (10) but suing 24/16 bit code 
 ;DIVIDE
@@ -57,7 +82,7 @@ Averaging:
 Division:
     movlw   0x0
     movwf   DIVISOR_H, A
-    movlw   0xA
+    movlw   0x14
     movwf   DIVISOR_L, A
     call    Division_24_16
     movf    Q_M, W, A

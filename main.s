@@ -156,9 +156,9 @@ detect_up:
     movwf   AHigh, A
     movf    ADRESL, w, A    ; Set ALow = ADRESL
     movwf   ALow, A
-    movlw   0x04	    ; Set BHigh = 0x04  ;This is our midpoint, 1250 mV
+    movlw   0x05	    ; Set BHigh = 0x04  ;This is our midpoint, 1250 mV
     movwf   BHigh, A
-    movlw   0xE7	    ; Set BLow = 0xE2 + 5 point buffer
+    movlw   0x78	    ; Set BLow = 0xE2 + 5 point buffer
     movwf   BLow, A
     call    Compare_Values  ; Compare A and B
     movwf   CompareBoolean, A  ; Moves boolean returned into CompareBoolean
@@ -175,7 +175,7 @@ detect_down:
     movwf   BLow, A
     movlw   0x04	    ; Set AHigh = 0x04
     movwf   AHigh, A
-    movlw   0xDD	    ; Set ALow = 0xE2 - 5 point buffer
+    movlw   0x4C	    ; Set ALow = 0xE2 - 100 point buffer
     movwf   ALow, A
     call    Compare_Values  ; Compare A and B
     movwf   CompareBoolean, A  ; Moves boolean returned into CompareBoolean
@@ -232,7 +232,7 @@ crossing_found:	; Crossing detected
     movwf   INDF0, A
     incf    arrayPointer, A ;so that the next time we loop we are at the correct position 
     ; if the array is full we want to go to array ops, if not we want to go to pre loop
-    movf  arrayLength, W, A
+    movf    arrayLength, W, A
     cpfseq  arrayPointer, A ;f equal do averaging operation else, go to preloop to reset timer for next crossing
     bra	    preloop	; This resets the timer and starts next detection
     bra	    array_ops	; Averages things
