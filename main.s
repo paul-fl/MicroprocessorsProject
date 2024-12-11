@@ -158,7 +158,7 @@ detect_up:
     movwf   ALow, A
     movlw   0x04	    ; Set BHigh = 0x04  ;This is our midpoint, 1250 mV
     movwf   BHigh, A
-    movlw   0xE2	    ; Set BLow = 0xE2
+    movlw   0xE7	    ; Set BLow = 0xE2 + 5 point buffer
     movwf   BLow, A
     call    Compare_Values  ; Compare A and B
     movwf   CompareBoolean, A  ; Moves boolean returned into CompareBoolean
@@ -175,7 +175,7 @@ detect_down:
     movwf   BLow, A
     movlw   0x04	    ; Set AHigh = 0x04
     movwf   AHigh, A
-    movlw   0xE2	    ; Set ALow = 0xE2
+    movlw   0xDD	    ; Set ALow = 0xE2 - 5 point buffer
     movwf   ALow, A
     call    Compare_Values  ; Compare A and B
     movwf   CompareBoolean, A  ; Moves boolean returned into CompareBoolean
