@@ -31,6 +31,7 @@ extrn   Note1, Note2, targetFreqH, targetFreqL
 extrn	DIV_H, DIV_M, DIV_L, DIVISOR_H, DIVISOR_L, Q_H, Q_M, Q_L
 extrn	TimerH, TimerL
 extrn	AverageH, AverageL
+extrn	UART_Transmit_Byte, UART_Transmit_Message
 global	arrayPointer, arrayLength, FreqArray
 
      
@@ -83,7 +84,7 @@ setup:
     movwf   arrayPointer, A    
     movlw   FreqArray
     addwf   arrayLength, A ;gives the endpoint of the array
-    incf    arrayLength ;condition checks for one after length position 
+    incf    arrayLength, A ;condition checks for one after length position 
     
     call    UART_Setup	; setup UART
     call    LCD_Setup	; setup LCD
@@ -218,21 +219,21 @@ crossing_found:	; Crossing detected
     ;start by putting the address of arrayPointer into FSR0
     ;arrayPointer is initialised to the beginning of FreqArray
     movlw   0x00
-    movwf   FSR0H
+    movwf   FSR0H, A
     movf    arrayPointer, W, A
-    movwf   FSR0L
+    movwf   FSR0L, A
     ;now write our value into the array
     movf    Q_M, W, A  ; Move medium of quotient into freq high position
-    movwf   INDF0
+    movwf   INDF0, A
     incf    arrayPointer, A
     movf    arrayPointer, W, A
-    movwf   FSR0L
+    movwf   FSR0L, A
     movf    Q_L, W, A  ; Quotient low is frequency low
-    movwf   INDF0
+    movwf   INDF0, A
     incf    arrayPointer, A ;so that the next time we loop we are at the correct position 
     ; if the array is full we want to go to array ops, if not we want to go to pre loop
     movf  arrayLength, W, A
-    cpfseq  arrayPointer ;f equal do averaging operation else, go to preloop to reset timer for next crossing
+    cpfseq  arrayPointer, A ;f equal do averaging operation else, go to preloop to reset timer for next crossing
     bra	    preloop	; This resets the timer and starts next detection
     bra	    array_ops	; Averages things
     
@@ -244,6 +245,10 @@ preloop:
 array_ops: ; Performs all calculations on array to get frequency and on the frequency
     ; AVERAGE THE ARRAY ### Assuming output is in averageHigh and averageLow
     call    Averaging
+    movf    AverageL, W, A
+    call    UART_Transmit_Byte
+    movf    AverageH, W, A
+    call    UART_Transmit_Byte
     bra	LED_output  ; Compares the average to target and outputs to LEDs
     
 LED_output: ; Outputs sharp, flat, and in-tune ot PORTF
@@ -321,10 +326,23 @@ array_ops2:
     ; The quotient will be only in low
     
     ; Increment relevant bin by one
-    incf    Spectrum + Q_L, A
+    lfsr    0, Spectrum
+    movf    Q_L, W, A
+    addwf   FSR0L, A
+    incf    INDF0, A
     
-    ; ### bra to UART export code for spectrum
-   
+    ;have some start marker for the python code (0xFF)
+    movlw   0xFF
+    call    UART_Transmit_Byte
+    
+    ;UART Transmit Message seems to use FSR 2
+    lfsr    2, Spectrum
+    movlw   10 ;length of our array
+    call    UART_Transmit_Message
+    
+    movlw   0x00   ;some kind of end point for the python code?
+    call    UART_Transmit_Byte
+       
     bra	    preloop ; Resets timer to get ready for next reading
 
 delay:	
