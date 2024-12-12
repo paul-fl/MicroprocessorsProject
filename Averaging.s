@@ -44,10 +44,13 @@ Averaging:
     clrf    AverageL, A
     movlw   FreqArray	; Moves FreqArray's address into Pointer
     movwf   Pointer, A
+    incf    Pointer, A
+    incf    Pointer, A
+    incf    Pointer, A
+    incf    Pointer, A
     movlw   FreqArray
     addwf   Length, A  ; This gives the endpoint of the array
-    incf    Length, A  ; The condition checks for one after length position
-    incf    Length, A
+    ;incf    Length, A  ; The condition checks for one after length position
  
 AveragingLoop:
     movlw   0x00
@@ -82,7 +85,7 @@ AveragingLoop:
 Division:
     movlw   0x0
     movwf   DIVISOR_H, A
-    movlw   0x0A
+    movlw   0x08
     movwf   DIVISOR_L, A
     call    Division_24_16
     movf    Q_M, W, A

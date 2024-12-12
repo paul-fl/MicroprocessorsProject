@@ -251,6 +251,8 @@ preloop:
     
 array_ops: ; Performs all calculations on array to get frequency and on the frequency
     ; AVERAGE THE ARRAY ### MOVE POINTER BACK to start of array
+    clrf    AverageH
+    clrf    AverageL
     call    Averaging
     movf    AverageL, W, A
     call    UART_Transmit_Byte
@@ -270,7 +272,7 @@ LED_output: ; Outputs sharp, flat, and in-tune ot PORTF
     movf   targetFreqL, W,  A
     movwf   BLow, A
     ; w/ possible target freqs, \pm 2 will not roll over to high --> BLow only
-    movlw   0x02
+    movlw   0x05
     addwf   BLow, A    ; Adds the 2 Hz to the upper bound
     call    Compare_Values  ; retw 1 if sharp, else more checks
     movwf   CompareBoolean, A
@@ -291,7 +293,7 @@ check_flat: ; Part of LED_output
     movf    targetFreqL, W, A
     movwf   BLow, A
     ; w/ possible target freqs, \pm 2 will not roll over to high --> BLow only
-    movlw   0x02
+    movlw   0x05
     subwf   BLow, A    ; Subtract 2 from BLow
     call    Compare_Values  ; retw 1 if in-tune, less than means flat
     movwf   CompareBoolean, A
