@@ -51,19 +51,19 @@ Averaging:
  
 AveragingLoop:
     movlw   0x00
-    movwf   FSR0H
-    movf    Pointer, W, A   ; Load high byte into nedium
-    movwf   FSR0L
+    movwf   FSR0H, A
+    movf    Pointer, W, A   ; Load high byte into medium
+    movwf   FSR0L, A
     movf    INDF0, W, A
     addwf   DIV_M, F, A          ;  Add to the medium byte of the sum
     btfsc   STATUS, 0, A 			; Check for carry
     incf    DIV_H, F, A          ;  Add carry to the high byte
 
     movlw   0x00
-    movwf   FSR0H
+    movwf   FSR0H, A
     incf    Pointer, F, A
     movf    Pointer, W, A	; Load low byte
-    movwf   FSR0L
+    movwf   FSR0L, A
     movf    INDF0, W, A
     addwf   DIV_L, F, A          ; Add to the low byte of the sum
     btfsc   STATUS, 0, A                  ; Check for carry
@@ -82,7 +82,7 @@ AveragingLoop:
 Division:
     movlw   0x0
     movwf   DIVISOR_H, A
-    movlw   0x14
+    movlw   0x0A
     movwf   DIVISOR_L, A
     call    Division_24_16
     movf    Q_M, W, A

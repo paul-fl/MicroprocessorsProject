@@ -48,8 +48,10 @@ AHigh:	        ds 1        ; High byte of A
 ALow:		ds 1        ; Low byte of A
 BHigh:		ds 1        ; High byte of B
 BLow:		ds 1        ; Low byte of B
+    
+;psect udata_bank3
 FreqArray:	ds 20       ; Frequency array: 10 16-bit values
-Spectrum:	ds 10	    ; Spectrum of the drequencies measured 10 bins of counts
+;Spectrum:	ds 10	    ; Spectrum of the drequencies measured 10 bins of counts
 
 
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
@@ -78,13 +80,13 @@ setup:
     movwf   upDown, A
     movlw   0x00	; Set PORTF to an output
     movwf   TRISH, A
-    movlw   20 ; for 10 16 bit numbers 
+    movlw   20 ; for 10 16 bit numbers ;!!!!
     movwf   arrayLength, A	;length of the array   
     movlw   FreqArray	;Moves the address of frequency array into the arrayPointer  
     movwf   arrayPointer, A    
     movlw   FreqArray
     addwf   arrayLength, A ;gives the endpoint of the array
-    incf    arrayLength, A ;condition checks for one after length position 
+    ;incf    arrayLength, A ;condition checks for one after length position 
     
     call    UART_Setup	; setup UART
     call    LCD_Setup	; setup LCD
@@ -156,9 +158,9 @@ detect_up:
     movwf   AHigh, A
     movf    ADRESL, w, A    ; Set ALow = ADRESL
     movwf   ALow, A
-    movlw   0x05	    ; Set BHigh = 0x04  ;This is our midpoint, 1250 mV
+    movlw   0x0A	    ; Set BHigh = 0x04  ;This is our midpoint, 2500 mV + buffer of 200 mv
     movwf   BHigh, A
-    movlw   0x78	    ; Set BLow = 0xE2 + 5 point buffer
+    movlw   0x8C	    ; Set BLow = 0xE2 + 5 point buffer
     movwf   BLow, A
     call    Compare_Values  ; Compare A and B
     movwf   CompareBoolean, A  ; Moves boolean returned into CompareBoolean
@@ -173,40 +175,45 @@ detect_down:
     movwf   BHigh, A
     movf    ADRESL, w, A    ; Set BLow = ADRESL
     movwf   BLow, A
-    movlw   0x04	    ; Set AHigh = 0x04
+    movlw   0x08	    ; Set AHigh = 0x04 (2300 mV)
     movwf   AHigh, A
-    movlw   0x4C	    ; Set ALow = 0xE2 - 100 point buffer
+    movlw   0xFC	    ; Set ALow = 0xE2 - 200 mv buffer
     movwf   ALow, A
     call    Compare_Values  ; Compare A and B
     movwf   CompareBoolean, A  ; Moves boolean returned into CompareBoolean
     movlw   0x00
     cpfseq  CompareBoolean, A	     ; Skip if W = 0
-    bra	    ADC_read_loop   ; Not a crossing, return to loop
     bra	    down_crossing_found   ; Crossing found, branch to handle
+    bra	    ADC_read_loop   ; Not a crossing, return to loop
+  
     
 up_crossing_found:
     movlw   0x00
     movwf   upDown, A  ; It will now look for a down
+    ;bsf	    PORTH, 3, A
     bra	    crossing_found
 
 down_crossing_found:
     movlw   0x01
     movwf   upDown, A ; It will now look for an up
+    ;bcf	    PORTH, 3, A
     bra	    crossing_found
     
 crossing_found:	; Crossing detected
+    ; call    Timer_Off
     call    Timer_Read
-    call    Timer_Off
+    call    Timer_Reset
+    ;bra	    ADC_read_loop
     ; Setting up division
-    movf    TimerH, W, A    ; Use timer value as denominator
-    movwf   DIVISOR_H, A
     movf    TimerL, W, A
     movwf   DIVISOR_L, A
-    movlw   0x1E	    ; Numerator is 2E6
+    movf    TimerH, W, A    ; Use timer value as denominator
+    movwf   DIVISOR_H, A
+    movlw   0x0F	    ; Numerator is 1E6
     movwf   DIV_H, A
-    movlw   0x84
+    movlw   0x42
     movwf   DIV_M, A
-    movlw   0x80
+    movlw   0x40
     movwf   DIV_L, A
     
     ; Perform division operation. This yields a frequency
@@ -238,18 +245,18 @@ crossing_found:	; Crossing detected
     bra	    array_ops	; Averages things
     
 preloop:
-    call    Timer_Reset	; Resets timer counter to 0
-    call    Timer_On	; Start timer again for next crossing
+    ; call    Timer_Reset	; Resets timer counter to 0
+    ; call    Timer_On	; Start timer again for next crossing
     bra	    ADC_read_loop
     
 array_ops: ; Performs all calculations on array to get frequency and on the frequency
-    ; AVERAGE THE ARRAY ### Assuming output is in averageHigh and averageLow
+    ; AVERAGE THE ARRAY ### MOVE POINTER BACK to start of array
     call    Averaging
     movf    AverageL, W, A
     call    UART_Transmit_Byte
     movf    AverageH, W, A
     call    UART_Transmit_Byte
-    bra	LED_output  ; Compares the average to target and outputs to LEDs
+    bra	    LED_output  ; Compares the average to target and outputs to LEDs
     
 LED_output: ; Outputs sharp, flat, and in-tune ot PORTF
     ; Assume 2 Hz uncertainty around target
@@ -284,6 +291,7 @@ check_flat: ; Part of LED_output
     movf    targetFreqL, W, A
     movwf   BLow, A
     ; w/ possible target freqs, \pm 2 will not roll over to high --> BLow only
+    movlw   0x02
     subwf   BLow, A    ; Subtract 2 from BLow
     call    Compare_Values  ; retw 1 if in-tune, less than means flat
     movwf   CompareBoolean, A
@@ -311,6 +319,8 @@ array_ops2:
     ; 10 bins for 0 to 500 Hz means 50 Hz interval
     ; Repurpose earlier division
     ; Setting up division with frequency (averageHigh/Low) as numerator and 0x32 as denominator
+    movlw   FreqArray
+    movwf   arrayPointer, A
     movlw   0x00    ; Use 0x32 as denominator
     movwf   DIVISOR_H, A
     movlw   0x32
@@ -326,7 +336,7 @@ array_ops2:
     ; The quotient will be only in low
     
     ; Increment relevant bin by one
-    lfsr    0, Spectrum
+    ;lfsr    0, Spectrum
     movf    Q_L, W, A
     addwf   FSR0L, A
     incf    INDF0, A
@@ -336,7 +346,7 @@ array_ops2:
     call    UART_Transmit_Byte
     
     ;UART Transmit Message seems to use FSR 2
-    lfsr    2, Spectrum
+    ;lfsr    2, Spectrum
     movlw   10 ;length of our array
     call    UART_Transmit_Message
     
