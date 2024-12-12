@@ -7,7 +7,7 @@ global	AHigh, ALow, BHigh, BLow
 global	FreqArray
     
 ; UART subroutines
-extrn	UART_Setup, UART_Transmit_Message   
+extrn	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte   
     
 ; Keypad subroutines
 extrn   Keypad_Setup, Keypad_Read, Keypad_Check	  
@@ -344,16 +344,16 @@ array_ops2:
     incf    INDF0, A
     
     ;have some start marker for the python code (0xFF)
-    movlw   0xFF
-    call    UART_Transmit_Byte
+    ;movlw   0xFF
+    ;call    UART_Transmit_Byte
     
     ;UART Transmit Message seems to use FSR 2
     ;lfsr    2, Spectrum
-    movlw   10 ;length of our array
-    call    UART_Transmit_Message
+    ;movlw   10 ;length of our array
+    ;call    UART_Transmit_Message
     
-    movlw   0x00   ;some kind of end point for the python code?
-    call    UART_Transmit_Byte
+    ;movlw   0x00   ;some kind of end point for the python code?
+    ;call    UART_Transmit_Byte
        
     bra	    preloop ; Resets timer to get ready for next reading
 
