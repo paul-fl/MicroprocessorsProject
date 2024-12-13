@@ -4,10 +4,10 @@
 ; Define global variables to be used by comparison
 global	AHigh, ALow, BHigh, BLow 
 ; Define frequency array to be used by averaging
-global	FreqArray
+global	FreqArray, Spectrum
     
 ; UART subroutines
-extrn	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte   
+extrn	UART_Setup, UART_Transmit_Message, UART_Transmit_Byte, UART_Write_Hex   
     
 ; Keypad subroutines
 extrn   Keypad_Setup, Keypad_Read, Keypad_Check	  
@@ -51,7 +51,7 @@ BLow:		ds 1        ; Low byte of B
     
 ;psect udata_bank3
 FreqArray:	ds 20       ; Frequency array: 10 16-bit values
-;Spectrum:	ds 10	    ; Spectrum of the drequencies measured 10 bins of counts
+Spectrum:	ds 10	    ; Spectrum of the drequencies measured 10 bins of counts
 
 
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
@@ -254,10 +254,11 @@ array_ops: ; Performs all calculations on array to get frequency and on the freq
     clrf    AverageH
     clrf    AverageL
     call    Averaging
-    movf    AverageL, W, A
-    call    UART_Transmit_Byte
-    movf    AverageH, W, A
-    call    UART_Transmit_Byte
+    ;movf    AverageH, W, A
+    ;call    UART_Write_Hex
+    ;movf    AverageL, W, A
+    ;call    UART_Write_Hex
+
     bra	    LED_output  ; Compares the average to target and outputs to LEDs
     
 LED_output: ; Outputs sharp, flat, and in-tune ot PORTF
@@ -338,22 +339,26 @@ array_ops2:
     ; The quotient will be only in low
     
     ; Increment relevant bin by one
-    ;lfsr    0, Spectrum
+    lfsr    0, Spectrum
     movf    Q_L, W, A
     addwf   FSR0L, A
     incf    INDF0, A
     
     ;have some start marker for the python code (0xFF)
-    ;movlw   0xFF
-    ;call    UART_Transmit_Byte
+    movlw   0xFF
+    call    UART_Write_Hex
+    movlw   0x00
+    call    UART_Write_Hex
     
     ;UART Transmit Message seems to use FSR 2
-    ;lfsr    2, Spectrum
-    ;movlw   10 ;length of our array
-    ;call    UART_Transmit_Message
+    lfsr    2, Spectrum
+    movlw   10 ;length of our array
+    call    UART_Transmit_Message
     
-    ;movlw   0x00   ;some kind of end point for the python code?
-    ;call    UART_Transmit_Byte
+    movlw   0x00   ;some kind of end point for the python code?
+    call    UART_Write_Hex
+    movlw   0xFF   ;some kind of end point for the python code?
+    call    UART_Write_Hex
        
     bra	    preloop ; Resets timer to get ready for next reading
 
