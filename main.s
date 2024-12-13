@@ -19,7 +19,10 @@ extrn	LCD_Setup, LCD_Write_Message, LCD_Send_Byte_D, LCD_Clear_Display
 extrn	ADC_Setup, ADC_Read		  
 
 ; Timer subroutines
-extrn	Timer_Setup, Timer_Read, Timer_On, Timer_Off, Timer_Reset		
+extrn	Timer_Setup, Timer_Read, Timer_On, Timer_Off, Timer_Reset	
+    
+; Spectrum subroutines
+extrn	clear_spectrum
 
 ; 16 bit arithmetic and logic functions
 extrn   Division_24_16
@@ -49,6 +52,7 @@ ALow:		ds 1        ; Low byte of A
 BHigh:		ds 1        ; High byte of B
 BLow:		ds 1        ; Low byte of B
     
+
 ;psect udata_bank3
 FreqArray:	ds 20       ; Frequency array: 10 16-bit values
 Spectrum:	ds 10	    ; Spectrum of the drequencies measured 10 bins of counts
@@ -93,8 +97,9 @@ setup:
     call    ADC_Setup	; setup ADC
     call    Keypad_Setup    ; setup Keypad 
     call    Timer_Setup	; setup Timer, timer is off 
-   
-	
+    call    clear_spectrum
+    
+    goto    prompt_load
 ; LCD_Prompt
     
 prompt_load:
@@ -251,8 +256,8 @@ preloop:
     
 array_ops: ; Performs all calculations on array to get frequency and on the frequency
     ; AVERAGE THE ARRAY ### MOVE POINTER BACK to start of array
-    clrf    AverageH
-    clrf    AverageL
+    clrf    AverageH, A
+    clrf    AverageL, A
     call    Averaging
     ;movf    AverageH, W, A
     ;call    UART_Write_Hex
@@ -273,7 +278,7 @@ LED_output: ; Outputs sharp, flat, and in-tune ot PORTF
     movf   targetFreqL, W,  A
     movwf   BLow, A
     ; w/ possible target freqs, \pm 2 will not roll over to high --> BLow only
-    movlw   0x0A
+    movlw   0x05
     addwf   BLow, A    ; Adds the 2 Hz to the upper bound
     call    Compare_Values  ; retw 1 if sharp, else more checks
     movwf   CompareBoolean, A
@@ -294,7 +299,7 @@ check_flat: ; Part of LED_output
     movf    targetFreqL, W, A
     movwf   BLow, A
     ; w/ possible target freqs, \pm 2 will not roll over to high --> BLow only
-    movlw   0x0A
+    movlw   0x05
     subwf   BLow, A    ; Subtract 2 from BLow
     call    Compare_Values  ; retw 1 if in-tune, less than means flat
     movwf   CompareBoolean, A
@@ -339,15 +344,15 @@ array_ops2:
     ; The quotient will be only in low
     
     ; Increment relevant bin by one
+    call    clear_spectrum
     lfsr    0, Spectrum
     movf    Q_L, W, A
     addwf   FSR0L, A
-    incf    INDF0, A
+    movlw   255
+    movwf    INDF0, A
     
     ;have some start marker for the python code (0xFF)
-    movlw   0xFF
-    call    UART_Write_Hex
-    movlw   0x00
+    movlw   0xAB
     call    UART_Write_Hex
     
     ;UART Transmit Message seems to use FSR 2
@@ -355,9 +360,7 @@ array_ops2:
     movlw   10 ;length of our array
     call    UART_Transmit_Message
     
-    movlw   0x00   ;some kind of end point for the python code?
-    call    UART_Write_Hex
-    movlw   0xFF   ;some kind of end point for the python code?
+    movlw   0xBA  ;some kind of end point for the python code?
     call    UART_Write_Hex
        
     bra	    preloop ; Resets timer to get ready for next reading

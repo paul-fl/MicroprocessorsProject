@@ -27,6 +27,7 @@
       <itemPath>Division.s</itemPath>
       <itemPath>Comparison.s</itemPath>
       <itemPath>Averaging.s</itemPath>
+      <itemPath>Spectrum.s</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
