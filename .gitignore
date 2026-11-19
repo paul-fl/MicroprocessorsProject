@@ -21,3 +21,5 @@ funclist
 nbproject/Makefile-*
 disassembly/
 *.map
+_build/
+defmplabxtrace.log*
